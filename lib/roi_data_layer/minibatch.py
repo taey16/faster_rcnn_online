@@ -21,12 +21,13 @@ def get_minibatch(im, roidb, num_classes):
     assert(cfg.TRAIN.BATCH_SIZE % num_images == 0), \
         'num_images ({}) must divide BATCH_SIZE ({})'. \
         format(num_images, cfg.TRAIN.BATCH_SIZE)
-    rois_per_image = cfg.TRAIN.BATCH_SIZE / num_images
-    fg_rois_per_image = np.round(cfg.TRAIN.FG_FRACTION * rois_per_image)
+    
+    # does not used in USE_RPN: True
+    #rois_per_image = cfg.TRAIN.BATCH_SIZE / num_images
+    #fg_rois_per_image = np.round(cfg.TRAIN.FG_FRACTION * rois_per_image)
 
     # Get the input image blob, formatted for caffe
     im_blob, im_scales = _get_image_blob(im, roidb, random_scale_inds)
-
     blobs = {'data': im_blob}
 
     assert len(im_scales) == 1, "Single batch only"

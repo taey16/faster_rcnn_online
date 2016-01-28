@@ -82,10 +82,10 @@ if __name__ == '__main__':
     caffe.set_mode_gpu()
 
     #import pdb; pdb.set_trace()
-    image_path_prefix = '/storage/product/detection/11st_Bag'
-    loader = eleven_12cat_bag(image_path_prefix, 'train')
-    #image_path_prefix = '/storage/product/detection/11st_All'
-    #loader = eleven_all(image_path_prefix, 'train')
+    #image_path_prefix = '/storage/product/detection/11st_Bag'
+    #loader = eleven_12cat_bag(image_path_prefix, 'train')
+    image_path_prefix = '/storage/product/detection/11st_All'
+    loader = eleven_all(image_path_prefix, 'train')
     output_dir = get_output_dir(loader, None)
     print 'Output will be saved to `{:s}`'.format(output_dir)
     sys.stdout.flush()

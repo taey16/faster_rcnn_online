@@ -18,7 +18,6 @@ class Loader:
     self.image_set = image_set
     self.image_path_prefix = os.path.join(self.data_path, 'Images/%s.jpg')
     self.annotation_filename = os.path.join(self.data_path, 'Annotations/annotations_' + self.image_set + '.txt')
-    #self.roi_filename = os.path.join(self.data_path, 'Annotations/annotations_' + self.image_set + '.txt' + '.pkl')
     self.load_list_im_roi()
 
 
