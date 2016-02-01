@@ -92,7 +92,7 @@ class AnchorTargetLayer(caffe.Layer):
 
         # 1. Generate proposals from bbox deltas and shifted anchors
         shift_x = np.arange(0, width) * self._feat_stride
-        shift_y = np.arange(0, height) * self._feat_stride
+        shift_y = np.arange(0, height)* self._feat_stride
         shift_x, shift_y = np.meshgrid(shift_x, shift_y)
         shifts = np.vstack((shift_x.ravel(), shift_y.ravel(),
                             shift_x.ravel(), shift_y.ravel())).transpose()
