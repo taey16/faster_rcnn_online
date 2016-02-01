@@ -117,7 +117,7 @@ class SolverWrapper(object):
 
 
 def train_net(solver_prototxt, loader, output_dir,
-              pretrained_model=None, max_iters=100000):
+              pretrained_model=None, max_iters=10000000):
 
     sw = SolverWrapper(solver_prototxt, loader, output_dir,
                        pretrained_model=pretrained_model)

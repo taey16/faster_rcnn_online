@@ -145,3 +145,4 @@ class BlobFetcher(Process):
       blobs = get_minibatch(im, minibatch_db, self._num_classes)
       self._queue.put(blobs)
 
+
