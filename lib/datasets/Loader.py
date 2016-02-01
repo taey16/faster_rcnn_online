@@ -16,8 +16,10 @@ class Loader:
   def __init__(self, data_path, image_set):
     self.data_path = data_path
     self.image_set = image_set
-    self.image_path_prefix = os.path.join(self.data_path, 'Images/%s.jpg')
-    self.annotation_filename = os.path.join(self.data_path, 'Annotations/annotations_' + self.image_set + '.txt')
+    self.image_path_prefix = \
+      os.path.join(self.data_path, 'Images/%s.jpg')
+    self.annotation_filename = \
+      os.path.join(self.data_path, 'Annotations/annotations_' + self.image_set + '.txt')
     self.load_list_im_roi()
 
 
@@ -73,7 +75,7 @@ class Loader:
   def prepare_roidb(self, roidb, height, width):
     roidb['width'] = width
     roidb['height']= height
-    # need gt_overlaps as a dense array for argmax
+    # need gt_overlaps as a dense array for argmax from sparse matrix.
     gt_overlaps = roidb['gt_overlaps'].toarray()
     # max overlap with gt over classes (columns)
     max_overlaps = gt_overlaps.max(axis=1)
@@ -118,7 +120,7 @@ class Loader:
     else:
       # Compute values needed for means and stds
       # var(x) = E(x^2) - E(x)^2
-      pass
+      raise NotImplementedError
 
     print 'bbox target means:'
     print self.means
@@ -140,7 +142,7 @@ class Loader:
     num_classes = roidb[0]['gt_overlaps'].shape[1]
     for im_i in xrange(num_images):
       roi = roidb[im_i]['boxes']
-      max_overlaps = roidb[im_i]['max_overlaps']
+      max_overlaps= roidb[im_i]['max_overlaps']
       max_classes = roidb[im_i]['max_classes']
       roidb[im_i]['bbox_targets'] = self._compute_targets(roi, max_overlaps, max_classes)
 
@@ -181,6 +183,7 @@ class Loader:
     targets = np.zeros((rois.shape[0], 5), dtype=np.float32)
     targets[ex_inds, 0] = labels[ex_inds]
     targets[ex_inds, 1:] = bbox_transform(ex_rois, gt_rois)
+
     return targets
 
 
