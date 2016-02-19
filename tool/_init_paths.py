@@ -17,7 +17,8 @@ def add_path(path):
 this_dir = osp.dirname(__file__)
 
 # Add caffe to PYTHONPATH
-caffe_path = osp.join('/works/', 'caffe_build_sys_py', 'python')
+caffe_path = osp.join('/works/', 'caffe', 'python')
+#caffe_path = osp.join('/works/', 'caffe_build_sys_py', 'python')
 add_path(caffe_path)
 print(caffe_path); sys.stdout.flush()
 
