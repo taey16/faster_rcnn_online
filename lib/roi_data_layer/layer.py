@@ -54,7 +54,7 @@ class RoIDataLayer(caffe.Layer):
     """Set the data loader to be used by this layer during training."""
     self._loader = loader
     self._shuffle_roidb_inds()
-    if cfg.TRAIN.USE_FREFETCH:
+    if cfg.TRAIN.USE_PREFETCH:
       self._blob_queue = Queue(10)
       self._prefetch_process = \
         BlobFetcher(self._blob_queue, self._loader, self._loader.num_classes)
