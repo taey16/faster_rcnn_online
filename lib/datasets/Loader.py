@@ -12,6 +12,8 @@ from fast_rcnn.bbox_transform import bbox_transform
 
 
 class Loader:
+  """Online data loader class which is acting as the 
+  roidb.py in original"""
 
   def __init__(self, data_path, image_set):
     self.data_path = data_path
@@ -185,5 +187,4 @@ class Loader:
     targets[ex_inds, 1:] = bbox_transform(ex_rois, gt_rois)
 
     return targets
-
 

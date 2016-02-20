@@ -32,6 +32,7 @@ def get_minibatch(im, roidb, num_classes):
 
   assert len(im_scales) == 1, "Single batch only"
   assert len(roidb) == 1, "Single batch only"
+
   # gt boxes: (x1, y1, x2, y2, cls)
   gt_inds = np.where(roidb[0]['gt_classes'] != 0)[0]
   gt_boxes = np.empty((len(gt_inds), 5), dtype=np.float32)

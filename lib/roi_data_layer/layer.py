@@ -24,6 +24,7 @@ class RoIDataLayer(caffe.Layer):
 
 
   def _shuffle_roidb_inds(self):
+    """Randomly permute the training roidb."""
     self._perm = np.random.permutation(np.arange(len(self._loader.list_image_roi)))
     self._cur = 0
 
@@ -40,20 +41,29 @@ class RoIDataLayer(caffe.Layer):
 
   def _get_next_minibatch(self):
     """Return the blobs to be used for the next minibatch."""
-    return self._blob_queue.get()
-
+    if cfg.TRAIN.USE_PREFETCH:
+      return self._blob_queue.get()
+    else:
+      db_inds = self._get_next_minibatch_inds()
+      im, minibatch_db = self._loader.load_im_and_roi(db_inds)
+      minibatch_db = self._loader.add_bbox_regression_targets(minibatch_db)
+      return get_minibatch(im, minibatch_db, self._num_classes)
+      
 
   def set_loader(self, loader):
+    """Set the data loader to be used by this layer during training."""
     self._loader = loader
-    self._blob_queue = Queue(10)
-    self._prefetch_process = \
-      BlobFetcher(self._blob_queue, self._loader, self._loader.num_classes)
-    self._prefetch_process.start()
-    def cleanup():
-      print 'Terminating BlobFetcher'; sys.stdout.flush()
-      self._prefetch_process.terminate()
-      self._prefetch_process.join()
-    atexit.register(cleanup)
+    self._shuffle_roidb_inds()
+    if cfg.TRAIN.USE_FREFETCH:
+      self._blob_queue = Queue(10)
+      self._prefetch_process = \
+        BlobFetcher(self._blob_queue, self._loader, self._loader.num_classes)
+      self._prefetch_process.start()
+      def cleanup():
+        print 'Terminating BlobFetcher'; sys.stdout.flush()
+        self._prefetch_process.terminate()
+        self._prefetch_process.join()
+      atexit.register(cleanup)
       
 
   def setup(self, bottom, top):
