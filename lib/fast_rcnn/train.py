@@ -23,7 +23,7 @@ class SolverWrapper(object):
     use to unnormalize the learned bounding-box regression weights.
     """
 
-    def __init__(self, solver_prototxt, loader, output_dir, pretrained_model = None):
+    def __init__(self, solver_prototxt, loader_train, loader_val, output_dir, pretrained_model = None):
 
         self.output_dir = output_dir
 
@@ -35,7 +35,10 @@ class SolverWrapper(object):
 
         if cfg.TRAIN.BBOX_REG:
             self.bbox_means, self.bbox_stds = \
-                    loader.get_bbox_regression_target_mean_and_std()
+                    loader_train.get_bbox_regression_target_mean_and_std()
+#	    self.bbox_means, self.bbox_stds = \
+	    if loader_val is not None :
+		    loader_val.get_bbox_regression_target_mean_and_std()
 
         self.solver = caffe.SGDSolver(solver_prototxt)
         if pretrained_model is not None:
@@ -50,9 +53,11 @@ class SolverWrapper(object):
 
         # add on-line data(image, roi) loader / regression target generator
         # into ROIDataLayer
-        self.solver.net.layers[0].set_loader(loader)
+        self.solver.net.layers[0].set_loader(loader_train)
         sys.stdout.flush()
 
+	if loader_val is not None :
+		self.solver.test_nets[0].layers[0].set_loader(loader_val)
 
     def snapshot(self):
         """Take a snapshot of the network after unnormalizing the learned
@@ -118,10 +123,10 @@ class SolverWrapper(object):
         return model_paths
 
 
-def train_net(solver_prototxt, loader, output_dir,
+def train_net(solver_prototxt, loader_train, loader_val, output_dir,
               pretrained_model=None, max_iters=10000000):
 
-    sw = SolverWrapper(solver_prototxt, loader, output_dir,
+    sw = SolverWrapper(solver_prototxt, loader_train, loader_val, output_dir,
                        pretrained_model=pretrained_model)
 
     print 'Solving...'; sys.stdout.flush()

@@ -33,11 +33,12 @@ def parse_args():
                         default=90000000, type=int)
     parser.add_argument('--weights', dest='pretrained_model',
                         help='initialize with pretrained model weights',
-                        default='/storage/ImageNet/ILSVRC2012/model/vgg/faster_rcnn_end2end/imagenet_models/VGG16.v2.caffemodel',
+			                  default='/storage/ImageNet/ILSVRC2012/model/resnet/faster_rcnn_end2end/imagenet_models/ResNet-101-model.caffemodel',
+                        #default='/storage/ImageNet/ILSVRC2012/model/vgg/faster_rcnn_end2end/imagenet_models/VGG16.v2.caffemodel',
                         type=str)
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file',
-                        default='/storage/ImageNet/ILSVRC2012/model/vgg/faster_rcnn_end2end/cfgs/faster_rcnn_end2end_train.yml', 
+                        default='/usrdata/ImageSearch/11st_DB/11st_All/cfg/faster_rcnn_end2end_train_scale_jitter.yml', 
                         type=str)
     parser.add_argument('--imdb', dest='imdb_name',
                         help='dataset to train on',
@@ -73,9 +74,9 @@ if __name__ == '__main__':
     pprint.pprint(cfg)
 
     if not args.randomize:
-        # fix the random seeds (numpy and caffe) for reproducibility
-        np.random.seed(cfg.RNG_SEED)
-        caffe.set_random_seed(cfg.RNG_SEED)
+      # fix the random seeds (numpy and caffe) for reproducibility
+      np.random.seed(cfg.RNG_SEED)
+      caffe.set_random_seed(cfg.RNG_SEED)
 
     # set up caffe
     caffe.set_device(cfg.GPU_ID)
@@ -84,12 +85,14 @@ if __name__ == '__main__':
     #import pdb; pdb.set_trace()
     #image_path_prefix = '/storage/product/detection/11st_Bag'
     #loader = eleven_12cat_bag(image_path_prefix, 'train')
-    image_path_prefix = '/storage/product/detection/11st_All'
-    loader = eleven_all(image_path_prefix, 'train')
-    output_dir = get_output_dir(loader, None)
+    image_path_prefix = '/storage/11st_DB/11st_All'
+    loader_train = eleven_all(image_path_prefix, 'train')
+    #loader_val = eleven_all(image_path_prefix, 'val')
+    loader_val = None
+    output_dir = get_output_dir(loader_train, None)
     print 'Output will be saved to `{:s}`'.format(output_dir)
     sys.stdout.flush()
-
-    train_net(cfg.TRAIN.SOLVER_PROTOTXT, loader, output_dir,
+    print 'max iter : %d'%args.max_iters
+    train_net(cfg.TRAIN.SOLVER_PROTOTXT, loader_train, loader_val, output_dir,
               pretrained_model=cfg.TRAIN.CAFFE_MODEL,
               max_iters=args.max_iters)
