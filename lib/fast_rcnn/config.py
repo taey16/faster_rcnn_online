@@ -174,6 +174,7 @@ __C.TEST.PROTOTXT = ''
 __C.TEST.CAFFE_MODEL = ''
 
 __C.TEST.CONF_THRESH = 0.8
+__C.TEST.GUIDED_CONF_THRESH = 0.5 # in ccase user guide for cateory
 __C.TEST.NMS_THRESH = 0.3
 
 #
