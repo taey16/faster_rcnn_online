@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument('--weights', dest='pretrained_model',
                         help='initialize with pretrained model weights',
                         default='/storage/ImageNet/ILSVRC2012/model/vgg/faster_rcnn_end2end/imagenet_models/VGG16.v2.caffemodel',
-			#default='/storage/ImageNet/ILSVRC2012/model/resnet/faster_rcnn_end2end/imagenet_models/ResNet-101-model.caffemodel',
+			                  #default='/storage/ImageNet/ILSVRC2012/model/resnet/faster_rcnn_end2end/imagenet_models/ResNet-101-model.caffemodel',
                         type=str)
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file',
@@ -74,9 +74,9 @@ if __name__ == '__main__':
     pprint.pprint(cfg)
 
     if not args.randomize:
-        # fix the random seeds (numpy and caffe) for reproducibility
-        np.random.seed(cfg.RNG_SEED)
-        caffe.set_random_seed(cfg.RNG_SEED)
+      # fix the random seeds (numpy and caffe) for reproducibility
+      np.random.seed(cfg.RNG_SEED)
+      caffe.set_random_seed(cfg.RNG_SEED)
 
     # set up caffe
     caffe.set_device(cfg.GPU_ID)
