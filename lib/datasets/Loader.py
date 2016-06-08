@@ -99,6 +99,7 @@ class Loader:
 
   def load_im_and_roi(self, image_index):
     filename = self.image_path_prefix % self.list_image_roi[image_index][0]
+    #print(filename); sys.stdout.flush()
     im = cv2.imread(filename)
     height= im.shape[0]
     width = im.shape[1]

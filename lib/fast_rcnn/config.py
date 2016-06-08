@@ -174,7 +174,7 @@ __C.TEST.PROTOTXT = ''
 __C.TEST.CAFFE_MODEL = ''
 
 __C.TEST.CONF_THRESH = 0.8
-__C.TEST.GUIDED_CONF_THRESH = 0.5 # in ccase user guide for cateory
+__C.TEST.GUIDED_CONF_THRESH = 0.5 # in ccase where user guided detection
 __C.TEST.NMS_THRESH = 0.3
 
 #
@@ -211,6 +211,14 @@ __C.USE_GPU_NMS = True
 # Default GPU device id
 __C.GPU_ID = 0
 
+
+def get_snapshot_dir(imdb, net, path='/storage/product/detection/11st_All/output/'):
+    path = osp.abspath(osp.join(path, 'output', __C.EXP_DIR, imdb.name))
+
+    if net is None:
+        return path
+    else:
+        return osp.join(path, net.name)
 
 
 def get_output_dir(imdb, net):

@@ -11,14 +11,14 @@
 
 import _init_paths
 from fast_rcnn.train import train_net
-from fast_rcnn.config import cfg, cfg_from_file, cfg_from_list, get_output_dir
+from fast_rcnn.config import cfg, cfg_from_file, cfg_from_list, get_output_dir, get_snapshot_dir
 import caffe
 import argparse
 import pprint
 import numpy as np
 import sys
 from datasets.eleven_all import eleven_all
-from datasets.eleven_12cat_bag import eleven_12cat_bag
+#from datasets.eleven_19_category import eleven_19_category
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a Fast R-CNN network')
@@ -34,11 +34,11 @@ def parse_args():
     parser.add_argument('--weights', dest='pretrained_model',
                         help='initialize with pretrained model weights',
                         default='/storage/ImageNet/ILSVRC2012/model/vgg/faster_rcnn_end2end/imagenet_models/VGG16.v2.caffemodel',
-			#default='/storage/ImageNet/ILSVRC2012/model/resnet/faster_rcnn_end2end/imagenet_models/ResNet-101-model.caffemodel',
+                        #default='/storage/ImageNet/ILSVRC2012/model/resnet/faster_rcnn_end2end/imagenet_models/ResNet-101-model.caffemodel',
                         type=str)
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file',
-                        default='/usrdata/ImageSearch/11st_DB/11st_All/cfg/faster_rcnn_end2end_train_scale_jitter.yml', 
+                        default='/storage/product/detection/11st_All/11st_All/cfg/faster_rcnn_end2end_train_scale_jitter.yml', 
                         type=str)
     parser.add_argument('--imdb', dest='imdb_name',
                         help='dataset to train on',
@@ -83,11 +83,14 @@ if __name__ == '__main__':
     caffe.set_mode_gpu()
 
     #import pdb; pdb.set_trace()
-    image_path_prefix = '/storage/11st_DB/11st_All'
+    image_path_prefix = '/storage/product/detection/11st_All'
+    #loader_train = eleven_19_category(image_path_prefix, 'train')
+    #loader_val = eleven_19_category(image_path_prefix, 'val')
     loader_train = eleven_all(image_path_prefix, 'train')
     loader_val = eleven_all(image_path_prefix, 'val')
 
-    output_dir = get_output_dir(loader_train, None)
+    #output_dir = get_output_dir(loader_train, None)
+    output_dir = get_snapshot_dir(loader_train, None)
     print 'Output will be saved to `{:s}`'.format(output_dir)
     sys.stdout.flush()
     print 'max iter : %d'%args.max_iters
