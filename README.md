@@ -3,7 +3,7 @@
 
 # Modifications
 - Online(with threading) generation of image-batch, roidb and regression-target(see. [Loader.py](https://github.com/taey16/faster_rcnn_online/blob/trainval/lib/datasets/Loader.py))
-- Train/Valididation
+- Train/Valididation (see. [train_val_net.py](https://github.com/taey16/faster_rcnn_online/blob/trainval/tool/train_val_net.py))
 
 # Install dependencies for Faster-RCNN
 - Follow the original post: https://github.com/rbgirshick/py-faster-rcnn
