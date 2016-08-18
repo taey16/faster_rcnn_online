@@ -9,7 +9,7 @@
 - Follow the original post: https://github.com/rbgirshick/py-faster-rcnn
 
 # Caffe for Faster-RCNN
-1. copy roi_pooling_layer.[cpp/cu/hpp] and smooth_L1_loss_layer.[cpp/cu/hpp]
+- copy roi_pooling_layer.[cpp/cu/hpp] and smooth_L1_loss_layer.[cpp/cu/hpp]
 ```
 cd /YOUR_CAFFE_HOME/src/caffe/layers/
 cp /path/to/roi_pooling_layer.cpp .
@@ -19,7 +19,7 @@ cp /path/to/smooth_L1_loss_layer.cu .
 cd /YOUR_CAFFE_HOME/include/caffe/layers/
 cp /path/to/fast_rcnn_layers.hpp .
 ```
-2. Modify /YOUR_CAFFE_HOME/src/caffe/proto/caffe.proto
+- Modify /YOUR_CAFFE_HOME/src/caffe/proto/caffe.proto
 ```
 bla~
 bla~
@@ -60,5 +60,5 @@ message SmoothL1LossParameter {
 }
 <<<<<<<<<<<<<<<<<<<<<<<<
 ```
-3. Build caffe
+- Build caffe
 	* Check `Makefile.config` with `WITH_PYTHON_LAYER := 1` and `make pycaffe`
