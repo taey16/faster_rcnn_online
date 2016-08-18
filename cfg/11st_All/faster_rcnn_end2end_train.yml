@@ -1,0 +1,15 @@
+PHASE: TRAIN
+EXP_DIR: eleven_all
+GPU_ID: 1
+TRAIN:
+  SOLVER_PROTOTXT: /storage/product/detection/11st_All/prototxt/solver.prototxt
+  CAFFE_MODEL: /storage/ImageNet/ILSVRC2012/model/vgg/faster_rcnn_end2end/imagenet_models/VGG16.v2.caffemodel
+  HAS_RPN: True
+  USE_FLIPPED: True
+  IMS_PER_BATCH: 1
+  BBOX_NORMALIZE_TARGETS_PRECOMPUTED: True
+  RPN_POSITIVE_OVERLAP: 0.7
+  RPN_BATCHSIZE: 256
+  PROPOSAL_METHOD: gt
+  SNAPSHOT_ITERS: 10000
+  USE_PREFETCH: True

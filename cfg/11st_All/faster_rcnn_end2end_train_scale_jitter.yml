@@ -1,0 +1,23 @@
+PHASE: TRAIN
+EXP_DIR: eleven_all_vgg16_scale_jitter
+#EXP_DIR: eleven_all_ResNet-50_scale_jitter
+#EXP_DIR: eleven_all_ResNet-101_scale_jitter
+GPU_ID: 0
+TRAIN:
+  SOLVER_PROTOTXT: /works/faster_rcnn_online/prototxt/vgg16/solver_trainval_anneal.prototxt
+  #SOLVER_PROTOTXT: /storage/product/detection/11st_All/prototxt/solver_ResNet-50.prototxt
+  #SOLVER_PROTOTXT: /storage/product/detection/11st_All/prototxt/solver_ResNet-101.prototxt
+  #SOLVER_PROTOTXT: /storage/product/detection/11st_All/prototxt/solver_anneal.prototxt
+  CAFFE_MODEL: /storage/ImageNet/ILSVRC2012/model/vgg/faster_rcnn_end2end/imagenet_models/VGG16.v2.caffemodel
+  #CAFFE_MODEL: /storage/ImageNet/ILSVRC2012/model/resnet/faster_rcnn_end2end/imagenet_models/ResNet-50-model.caffemodel
+  #CAFFE_MODEL: /storage/ImageNet/ILSVRC2012/model/resnet/faster_rcnn_end2end/imagenet_models/ResNet-101-model.caffemodel
+  HAS_RPN: True
+  USE_FLIPPED: True
+  IMS_PER_BATCH: 1
+  BBOX_NORMALIZE_TARGETS_PRECOMPUTED: True
+  RPN_POSITIVE_OVERLAP: 0.7
+  RPN_BATCHSIZE: 256
+  PROPOSAL_METHOD: gt
+  SNAPSHOT_ITERS: 10000
+  USE_PREFETCH: False
+  SCALES: [1000,900,800,700,600,575,550,525,500,475,450,425,400,375,350,325,300,275]
