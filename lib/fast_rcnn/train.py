@@ -1,10 +1,3 @@
-# --------------------------------------------------------
-# Fast R-CNN
-# Copyright (c) 2015 Microsoft
-# Licensed under The MIT License [see LICENSE for details]
-# Written by Ross Girshick
-# --------------------------------------------------------
-
 """Train a Fast R-CNN network."""
 
 import caffe
@@ -23,15 +16,20 @@ class SolverWrapper(object):
   use to unnormalize the learned bounding-box regression weights.
   """
 
-  def __init__(self, solver_prototxt, loader_train, loader_val, output_dir, pretrained_model = None):
+  def __init__(self, 
+               solver_prototxt, 
+               loader_train,
+               loader_val, 
+               output_dir, 
+               pretrained_model = None):
 
     self.output_dir = output_dir
 
     if (cfg.TRAIN.HAS_RPN and 
         cfg.TRAIN.BBOX_REG and 
         cfg.TRAIN.BBOX_NORMALIZE_TARGETS):
-      # RPN can only use precomputed normalization because there are no
-      # fixed statistics to compute a priori
+      # NOTE: RPN can only use precomputed normalization because 
+      # there are no fixed statistics to compute a priori
       assert cfg.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED
 
     if cfg.TRAIN.BBOX_REG:
@@ -51,7 +49,7 @@ class SolverWrapper(object):
     with open(solver_prototxt, 'rt') as f:
       pb2.text_format.Merge(f.read(), self.solver_param)
 
-    # add on-line data(image, roi) loader / regression target generator into ROIDataLayer
+    # NOTE: add on-line data(image, roi) loader / regression target generator into ROIDataLayer
     self.solver.net.layers[0].set_loader(loader_train)
     # set solver for val set (Moonki)
     if loader_val is not None :
@@ -71,7 +69,6 @@ class SolverWrapper(object):
       orig_0 = net.params['bbox_pred'][0].data.copy()
       orig_1 = net.params['bbox_pred'][1].data.copy()
       # scale and shift with bbox reg unnormalization; then save snapshot
-      #import pdb; pdb.set_trace()
       net.params['bbox_pred'][0].data[...] = \
           (net.params['bbox_pred'][0].data *
            self.bbox_stds[:, np.newaxis])
@@ -103,8 +100,8 @@ class SolverWrapper(object):
     timer = Timer()
     model_paths = []
     while self.solver.iter < max_iters:
-      # Make one SGD update
       timer.tic()
+      # Make one SGD update
       self.solver.step(1)
       timer.toc()
       """
@@ -112,7 +109,6 @@ class SolverWrapper(object):
         print 'speed: {:.3f}s / iter'.format(timer.average_time)
         sys.stdout.flush()
       """
-
       if self.solver.iter % cfg.TRAIN.SNAPSHOT_ITERS == 0:
         last_snapshot_iter = self.solver.iter
         model_paths.append(self.snapshot())
@@ -122,13 +118,18 @@ class SolverWrapper(object):
     return model_paths
 
 
-def train_net(
-  solver_prototxt, loader_train, loader_val, output_dir,
-  pretrained_model=None, max_iters=10000000):
+def train_net(solver_prototxt, 
+              loader_train, 
+              loader_val, 
+              output_dir,
+              pretrained_model=None, 
+              max_iters=10000000):
 
-  sw = SolverWrapper(
-    solver_prototxt, loader_train, loader_val, output_dir,
-    pretrained_model=pretrained_model)
+  sw = SolverWrapper(solver_prototxt, 
+                     loader_train, 
+                     loader_val, 
+                     output_dir,
+                     pretrained_model=pretrained_model)
 
   print 'Solving...'; sys.stdout.flush()
   model_paths = sw.train_model(max_iters)

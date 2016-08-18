@@ -13,3 +13,4 @@
 - example (image_name : 12345.jpg, num_roi : 4)
 -- annotation : 12345 4 cls x1 y1 x2 y2 cls x1 y1 x2 y2 cls x1 y1 x2 y2 cls x1 y1 x2 y2
 - Prototxt path : /usrdata/ImageSearch/11st_DB/11st_All/prototxt/
+- author: Park Jungyoung, Kim Moonki, Kim Taewan

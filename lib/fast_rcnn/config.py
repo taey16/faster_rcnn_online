@@ -1,10 +1,3 @@
-# --------------------------------------------------------
-# Fast R-CNN
-# Copyright (c) 2015 Microsoft
-# Licensed under The MIT License [see LICENSE for details]
-# Written by Ross Girshick
-# --------------------------------------------------------
-
 """Fast R-CNN config system.
 
 This file specifies default config options for Fast R-CNN. You should not
@@ -45,7 +38,7 @@ __C.TRAIN.SCALES = (600,)
 __C.TRAIN.MAX_SIZE = 1000
 
 # Images to use per minibatch
-__C.TRAIN.IMS_PER_BATCH = 2
+__C.TRAIN.IMS_PER_BATCH = 1
 
 # Minibatch size (number of regions of interest [ROIs])
 __C.TRAIN.BATCH_SIZE = 128
@@ -75,6 +68,7 @@ __C.TRAIN.BBOX_THRESH = 0.5
 __C.TRAIN.SNAPSHOT_ITERS = 10000
 
 
+# set solver prototxt, caffe-model binaryproto
 __C.TRAIN.SOLVER_PROTOTXT = ''
 __C.TRAIN.CAFFE_MODEL = ''
 
@@ -174,7 +168,8 @@ __C.TEST.PROTOTXT = ''
 __C.TEST.CAFFE_MODEL = ''
 
 __C.TEST.CONF_THRESH = 0.8
-__C.TEST.GUIDED_CONF_THRESH = 0.5 # in ccase where user guided detection
+# NOTE: in ccase where user guided detection
+__C.TEST.GUIDED_CONF_THRESH = 0.1
 __C.TEST.NMS_THRESH = 0.3
 
 #
@@ -212,7 +207,7 @@ __C.USE_GPU_NMS = True
 __C.GPU_ID = 0
 
 
-def get_snapshot_dir(imdb, net, path='/storage/product/detection/11st_All/output/'):
+def get_snapshot_dir(imdb, net, path='/storage/product/detection/11st_All/'):
     path = osp.abspath(osp.join(path, 'output', __C.EXP_DIR, imdb.name))
 
     if net is None:

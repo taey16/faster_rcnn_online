@@ -7,7 +7,10 @@
 # Written by Ross Girshick
 # --------------------------------------------------------
 
-"""Train a Fast R-CNN network on a region of interest database."""
+"""
+Train a Fast R-CNN network on a region of interest database.
+Depreciated, use train_val_net.py instead!!!
+"""
 
 import _init_paths
 from fast_rcnn.train import train_net
