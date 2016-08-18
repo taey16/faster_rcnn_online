@@ -10,10 +10,12 @@ from fast_rcnn.config import cfg
 from utils.cython_bbox import bbox_overlaps
 from fast_rcnn.bbox_transform import bbox_transform
 
+"""
+Online data loader class which is acting as the 
+roidb.py in original py-faster-rcnn
+"""
 
 class Loader:
-  """Online data loader class which is acting as the 
-  roidb.py in original"""
 
   def __init__(self, data_path, image_set):
     self.data_path = data_path
