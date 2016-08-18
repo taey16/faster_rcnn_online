@@ -13,12 +13,12 @@
 1. copy roi_pooling_layer.[cpp/cu/hpp] and smooth_L1_loss_layer.[cpp/cu/hpp]
 ```
 cd /YOUR_CAFFE_HOME/src/caffe/layers/
-wget 10.202.35.109:2596/PBrain/co_work/Moonki/roi_pooling_layer.cpp .
-wget 10.202.35.109:2596/PBrain/co_work/Moonki/roi_pooling_layer.cu .
-wget 10.202.35.109:2596/PBrain/co_work/Moonki/smooth_L1_loss_layer.cpp .
-wget 10.202.35.109:2596/PBrain/co_work/Moonki/smooth_L1_loss_layer.cu .
+cp /path/to/roi_pooling_layer.cpp .
+cp /path/to/roi_pooling_layer.cu .
+cp /path/to/smooth_L1_loss_layer.cpp .
+cp /path/to/smooth_L1_loss_layer.cu .
 cd /YOUR_CAFFE_HOME/include/caffe/layers/
-wget 10.202.35.109:2596/PBrain/co_work/Moonki/fast_rcnn_layers.hpp .
+cp /path/to/fast_rcnn_layers.hpp .
 ```
 2. Modify /YOUR_CAFFE_HOME/src/caffe/proto/caffe.proto
 ```
