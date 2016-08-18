@@ -13,6 +13,6 @@ weight_decay: 0.0005
 snapshot: 0
 # We still use the snapshot prefix, though
 snapshot_prefix: "eleven_all_vgg16_faster_rcnn_anneal_stepsize200000"
-test_initialization: false
+test_initialization: true #false
 test_iter: 101905 #48492
 test_interval: 50000

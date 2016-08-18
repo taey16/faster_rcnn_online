@@ -1,0 +1,25 @@
+PHASE: TEST
+EXP_DIR: eleven_all
+TRAIN:
+  HAS_RPN: True
+  IMS_PER_BATCH: 1
+  BBOX_NORMALIZE_TARGETS_PRECOMPUTED: True
+  RPN_POSITIVE_OVERLAP: 0.7
+  RPN_BATCHSIZE: 256
+  PROPOSAL_METHOD: gt
+TEST:
+  HAS_RPN: True
+  PROTOTXT: /storage/product/detection/11st_All/prototxt/test.prototxt
+  #CAFFE_MODEL: /works/py_faster_rcnn_/output/eleven_12st_all/eleven_all_train/eleven_all_vgg16_faster_rcnn_iter_70000.caffemodel
+  #CAFFE_MODEL: /works/py_faster_rcnn_/output/eleven_all_scale_jitter/eleven_all_train/eleven_all_vgg16_faster_rcnn_iter_10000.caffemodel
+  #CAFFE_MODEL: /works/py_faster_rcnn_/output/eleven_all_scale_jitter/eleven_all_train/eleven_all_vgg16_faster_rcnn_iter_20000.caffemodel
+  #CAFFE_MODEL: /works/py_faster_rcnn_/output/eleven_all_scale_jitter/eleven_all_train/eleven_all_vgg16_faster_rcnn_iter_30000.caffemodel
+  #CAFFE_MODEL: /works/py_faster_rcnn_/output/eleven_all_scale_jitter/eleven_all_train/eleven_all_vgg16_faster_rcnn_iter_90000.caffemodel
+  #CAFFE_MODEL: /works/py_faster_rcnn_/output/eleven_all_scale_jitter/eleven_all_train/eleven_all_vgg16_faster_rcnn_iter_160000.caffemodel
+  #CAFFE_MODEL: /works/py_faster_rcnn_/output/eleven_all_scale_jitter/eleven_all_train/eleven_all_vgg16_faster_rcnn_iter_260000.caffemodel
+  #CAFFE_MODEL: /works/py_faster_rcnn_/output/eleven_all_scale_jitter/eleven_all_train/eleven_all_vgg16_faster_rcnn_annel_stepsize200000_iter_1800000.caffemodel
+  CAFFE_MODEL: /storage/product/detection/11st_All/output/eleven_all_scale_jitter/eleven_all_train/eleven_all_vgg16_faster_rcnn_annel_stepsize200000_iter_1800000.caffemodel
+  SCALES: [600]
+  CONF_THRESH: 0.67 #0.6 #0.8
+  GUIDED_CONF_THRESH: 0.05 #0.5 #user guide
+  NMS_THRESH: 0.3
