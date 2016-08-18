@@ -11,14 +11,15 @@
 # Caffe for Faster-RCNN
 - copy roi_pooling_layer.[cpp/cu/hpp] and smooth_L1_loss_layer.[cpp/cu/hpp]
 
-...`cd /YOUR_CAFFE_HOME/src/caffe/layers/
-...wget 10.202.35.109:2596/PBrain/co_work/Moonki/roi_pooling_layer.cpp .
-...wget 10.202.35.109:2596/PBrain/co_work/Moonki/roi_pooling_layer.cu .
-...wget 10.202.35.109:2596/PBrain/co_work/Moonki/smooth_L1_loss_layer.cpp .
-...wget 10.202.35.109:2596/PBrain/co_work/Moonki/smooth_L1_loss_layer.cu .
-...cd /YOUR_CAFFE_HOME/include/caffe/layers/
-...wget 10.202.35.109:2596/PBrain/co_work/Moonki/fast_rcnn_layers.hpp .`
+⋅⋅⋅`cd /YOUR_CAFFE_HOME/src/caffe/layers/
+⋅⋅⋅wget 10.202.35.109:2596/PBrain/co_work/Moonki/roi_pooling_layer.cpp .
+⋅⋅⋅wget 10.202.35.109:2596/PBrain/co_work/Moonki/roi_pooling_layer.cu .
+⋅⋅⋅wget 10.202.35.109:2596/PBrain/co_work/Moonki/smooth_L1_loss_layer.cpp .
+⋅⋅⋅wget 10.202.35.109:2596/PBrain/co_work/Moonki/smooth_L1_loss_layer.cu .
+⋅⋅⋅cd /YOUR_CAFFE_HOME/include/caffe/layers/
+⋅⋅⋅wget 10.202.35.109:2596/PBrain/co_work/Moonki/fast_rcnn_layers.hpp .`
 - Modify /YOUR_CAFFE_HOME/src/caffe/proto/caffe.proto
+
 `bla~
 bla~
 message LayerParameter {
