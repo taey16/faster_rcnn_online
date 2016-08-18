@@ -99,7 +99,7 @@ __C.TRAIN.PROPOSAL_METHOD = 'selective_search'
 __C.TRAIN.ASPECT_GROUPING = True
 
 # Use RPN to detect objects
-__C.TRAIN.HAS_RPN = False
+__C.TRAIN.HAS_RPN = True
 # IOU >= thresh: positive example
 __C.TRAIN.RPN_POSITIVE_OVERLAP = 0.7
 # IOU < thresh: negative example
@@ -150,10 +150,10 @@ __C.TEST.SVM = False
 __C.TEST.BBOX_REG = True
 
 # Propose boxes
-__C.TEST.HAS_RPN = False
+__C.TEST.HAS_RPN = True
 
 # Test using these proposals
-__C.TEST.PROPOSAL_METHOD = 'selective_search'
+__C.TEST.PROPOSAL_METHOD = None
 
 ## NMS threshold used on RPN proposals
 __C.TEST.RPN_NMS_THRESH = 0.7
@@ -167,9 +167,9 @@ __C.TEST.RPN_MIN_SIZE = 16
 __C.TEST.PROTOTXT = ''
 __C.TEST.CAFFE_MODEL = ''
 
-__C.TEST.CONF_THRESH = 0.8
+__C.TEST.CONF_THRESH = 0.67
 # NOTE: in ccase where user guided detection
-__C.TEST.GUIDED_CONF_THRESH = 0.1
+__C.TEST.GUIDED_CONF_THRESH = 0.05
 __C.TEST.NMS_THRESH = 0.3
 
 #
