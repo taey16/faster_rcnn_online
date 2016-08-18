@@ -1,5 +1,6 @@
 # faster_rcnn_online
 - Original post: https://github.com/rbgirshick/py-faster-rcnn
+- http://arxiv.org/abs/1506.01497
 
 # Modifications
 - Online(with threading) generation of image-batch, roidb and regression-target(see. [Loader.py](https://github.com/taey16/faster_rcnn_online/blob/trainval/lib/datasets/Loader.py))
