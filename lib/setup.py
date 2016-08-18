@@ -148,7 +148,7 @@ ext_modules = [
 ]
 
 setup(
-    name='fast_rcnn',
+    name='faster_rcnn',
     ext_modules=ext_modules,
     # inject our custom trigger
     cmdclass={'build_ext': custom_build_ext},
