@@ -5,9 +5,8 @@
 - Online(with threading) image-batch, roidb, regression-target generator (see. Loader.py)
 - Train/Valididation
 
-# install guide
-- Dependencies: 
-	* Follow the original post: https://github.com/rbgirshick/py-faster-rcnn
+# install dependencies for Faster-RCNN
+- Follow the original post: https://github.com/rbgirshick/py-faster-rcnn
 
 # Caffe for Faster-RCNN
 1. copy roi_pooling_layer.[cpp/cu/hpp] and smooth_L1_loss_layer.[cpp/cu/hpp]
