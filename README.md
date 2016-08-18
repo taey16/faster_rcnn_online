@@ -9,7 +9,7 @@
 - Follow the original post: https://github.com/rbgirshick/py-faster-rcnn
 
 # Caffe for Faster-RCNN
-- copy roi_pooling_layer.[cpp/cu/hpp] and smooth_L1_loss_layer.[cpp/cu/hpp]
+- copy roi_pooling_layer.[cpp/cu], smooth_L1_loss_layer.[cpp/cu], and fast_rcnn_layers.hpp
 ```
 cd /YOUR_CAFFE_HOME/src/caffe/layers/
 cp /path/to/roi_pooling_layer.cpp .
