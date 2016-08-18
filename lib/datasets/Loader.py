@@ -118,8 +118,8 @@ class Loader:
   def get_bbox_regression_target_mean_and_std(self):
     if cfg.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED:
       # Use fixed / precomputed "means" and "stds" instead of empirical values
-      self.means= np.tile( np.array(cfg.TRAIN.BBOX_NORMALIZE_MEANS),(self.num_classes, 1))
-      self.stds = np.tile( np.array(cfg.TRAIN.BBOX_NORMALIZE_STDS), (self.num_classes, 1))
+      self.means= np.tile(np.array(cfg.TRAIN.BBOX_NORMALIZE_MEANS),(self.num_classes, 1))
+      self.stds = np.tile(np.array(cfg.TRAIN.BBOX_NORMALIZE_STDS), (self.num_classes, 1))
     else:
       # Compute values needed for means and stds
       # var(x) = E(x^2) - E(x)^2
