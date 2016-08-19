@@ -1,0 +1,16 @@
+train_net: "/works/faster_rcnn_online/prototxt/resnet/ResNet-101_train_with_accuracy.prototxt"
+test_net: "/works/faster_rcnn_online/prototxt/resnet/ResNet-101_train_with_accuracy.prototxt"
+base_lr: 0.001
+lr_policy: "step"
+gamma: 0.1
+stepsize: 200000
+display: 20
+average_loss: 10000
+momentum: 0.9
+weight_decay: 0.0005
+# We disable standard caffe solver snapshotting and implement our own snapshot function
+snapshot: 0
+# We still use the snapshot prefix, though
+snapshot_prefix: "eleven_all_ResNet-101_faster_rcnn_anneal_stepsize200000"
+test_iter: 50000
+test_interval: 100000
