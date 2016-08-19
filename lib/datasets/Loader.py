@@ -26,6 +26,8 @@ class Loader:
       os.path.join(self.data_path, 'Annotations/annotations_' + self.image_set + '.txt')
     self.load_list_im_roi()
 
+    self.set_id = image_set
+
 
   def load_list_im_roi(self):
     self.list_image_roi = [entry.strip().split(' ') \
@@ -106,14 +108,14 @@ class Loader:
     height= im.shape[0]
     width = im.shape[1]
     roidb = self.load_roi(image_index)
-    flipped = random.randint(0, 1)
-    if flipped: 
-      im = im[:,::-1,:]
-      roidb[0]['boxes'] = self.flip_roi(roidb[0]['boxes'], width)
-      roidb[0]['flipped'] = True
+    if self.set_id == 'train':
+      flipped = random.randint(0, 1)
+      if flipped: 
+        im = im[:,::-1,:]
+        roidb[0]['boxes'] = self.flip_roi(roidb[0]['boxes'], width)
+        roidb[0]['flipped'] = True
 
     roidb[0] = self.prepare_roidb(roidb[0], height, width)
-
     return im, roidb
 
 

@@ -25,7 +25,8 @@ class RoIDataLayer(caffe.Layer):
 
   def _shuffle_roidb_inds(self):
     """Randomly permute the training roidb."""
-    self._perm = np.random.permutation(np.arange(len(self._loader.list_image_roi)))
+    self._perm = \
+      np.random.permutation(np.arange(len(self._loader.list_image_roi)))
     self._cur = 0
 
 
@@ -47,7 +48,7 @@ class RoIDataLayer(caffe.Layer):
       db_inds = self._get_next_minibatch_inds()
       im, minibatch_db = self._loader.load_im_and_roi(db_inds)
       minibatch_db = self._loader.add_bbox_regression_targets(minibatch_db)
-      return get_minibatch(im, minibatch_db, self._num_classes)
+      return get_minibatch(im, minibatch_db, self._num_classes, self._loader.set_id)
       
 
   def set_loader(self, loader):

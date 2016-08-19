@@ -13,11 +13,19 @@ from fast_rcnn.config import cfg
 from utils.blob import prep_im_for_blob, im_list_to_blob
 
 
-def get_minibatch(im, roidb, num_classes):
+def get_minibatch(im, roidb, num_classes, set_id):
   """Given a roidb, construct a minibatch sampled from it."""
   num_images = len(roidb)
   # Sample random scales to use for each image in this batch
-  random_scale_inds = npr.randint(0, high=len(cfg.TRAIN.SCALES), size=num_images)
+  # NOTE: scale jittering in training phase only
+  if set_id == 'train':
+    scales_list = cfg.TRAIN.SCALES
+  else:
+    scales_list = cfg.TEST.SCALES
+
+  random_scale_inds = npr.randint(0, high=len(scales_list), size=num_images)
+  target_size = scales_list[random_scale_inds]
+    
   assert(cfg.TRAIN.BATCH_SIZE % num_images == 0), \
     'num_images ({}) must divide BATCH_SIZE ({})'. \
     format(num_images, cfg.TRAIN.BATCH_SIZE)
@@ -27,7 +35,8 @@ def get_minibatch(im, roidb, num_classes):
   #fg_rois_per_image = np.round(cfg.TRAIN.FG_FRACTION * rois_per_image)
 
   # Get the input image blob, formatted for caffe
-  im_blob, im_scales = _get_image_blob(im, roidb, random_scale_inds)
+  #im_blob, im_scales = _get_image_blob(im, roidb, random_scale_inds)
+  im_blob, im_scales = _get_image_blob(im, roidb, target_size)
   blobs = {'data': im_blob}
 
   assert len(im_scales) == 1, "Single batch only"
@@ -50,7 +59,8 @@ def get_minibatch(im, roidb, num_classes):
   return blobs
 
 
-def _get_image_blob(im, roidb, scale_inds):
+#def _get_image_blob(im, roidb, scale_inds):
+def _get_image_blob(im, roidb, target_size):
   """
   Builds an input blob from the images in the roidb at the specified scales.
   """
@@ -58,7 +68,7 @@ def _get_image_blob(im, roidb, scale_inds):
   processed_ims = []
   im_scales = []
   for i in xrange(num_images):
-    target_size = cfg.TRAIN.SCALES[scale_inds[i]]
+    #target_size = cfg.TRAIN.SCALES[scale_inds[i]]
     im, im_scale = prep_im_for_blob(im, cfg.PIXEL_MEANS, target_size, cfg.TRAIN.MAX_SIZE)
     im_scales.append(im_scale)
     processed_ims.append(im)
