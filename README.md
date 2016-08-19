@@ -63,3 +63,4 @@ message SmoothL1LossParameter {
 ```
 - Build caffe
 	* Check `Makefile.config` with `WITH_PYTHON_LAYER := 1` and `make pycaffe`
+
