@@ -1,15 +1,15 @@
 PHASE: TRAIN
-#EXP_DIR: eleven_all_vgg16_scale_jitter
-EXP_DIR: eleven_all_ResNet-50_scale_jitter
+EXP_DIR: eleven_all_vgg16_scale_jitter
+#EXP_DIR: eleven_all_ResNet-50_scale_jitter
 #EXP_DIR: eleven_all_ResNet-101_scale_jitter
 GPU_ID: 0
 TRAIN:
   ## vgg16
-  #SOLVER_PROTOTXT: /works/faster_rcnn_online/prototxt/vgg16/solver_trainval_anneal.prototxt
-  #CAFFE_MODEL: /storage/ImageNet/ILSVRC2012/model/vgg/faster_rcnn_end2end/imagenet_models/VGG16.v2.caffemodel
+  SOLVER_PROTOTXT: /works/faster_rcnn_online/prototxt/vgg16/solver_trainval_anneal.prototxt
+  CAFFE_MODEL: /storage/ImageNet/ILSVRC2012/model/vgg/faster_rcnn_end2end/imagenet_models/VGG16.v2.caffemodel
   ## ResNet-50
-  SOLVER_PROTOTXT: /works/faster_rcnn_online/prototxt/resnet/solver_ResNet-50.prototxt
-  CAFFE_MODEL: /storage/ImageNet/ILSVRC2012/model/resnet/faster_rcnn_end2end/imagenet_models/ResNet-50-model.caffemodel
+  #SOLVER_PROTOTXT: /works/faster_rcnn_online/prototxt/resnet/solver_ResNet-50.prototxt
+  #CAFFE_MODEL: /storage/ImageNet/ILSVRC2012/model/resnet/faster_rcnn_end2end/imagenet_models/ResNet-50-model.caffemodel
   ## ResNet-101
   #SOLVER_PROTOTXT: /storage/product/detection/11st_All/prototxt/solver_ResNet-101.prototxt
   #CAFFE_MODEL: /storage/ImageNet/ILSVRC2012/model/resnet/faster_rcnn_end2end/imagenet_models/ResNet-101-model.caffemodel
@@ -23,3 +23,5 @@ TRAIN:
   SNAPSHOT_ITERS: 10000
   USE_PREFETCH: False
   SCALES: [1000,900,800,700,600,575,550,525,500,475,450,425,400,375,350,325,300,275]
+TEST:
+  SCALES: [600]
