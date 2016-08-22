@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """
-Demo script showing detections in sample images.
-See README.md for installation instructions before running.
+Evaluation(mAP) for faster-rcnn
 """
 
 import os
@@ -21,8 +20,6 @@ from utils.timer import Timer
 import caffe
 import cv2
 import numpy as np
-
-import matplotlib.pyplot as plt
 
 """
 # 11st 19 classes
@@ -138,45 +135,9 @@ def VOCevaldet(gt_all,
   return average_precision
 
 
-def vis_detections(im, class_name, dets, CONF_THRESH=0.5):
-  """Draw detected bounding boxes."""
-  inds = np.where(dets[:, -1] >= CONF_THRESH)[0]
-  if len(inds) == 0:
-    return
-  print CLASSES.index(class_name)
-  im = im[:, :, (2, 1, 0)]
-  fig, ax = plt.subplots(figsize=(12, 12))
-  ax.imshow(im, aspect='equal')
-  for i in inds :
-    bbox = dets[i, :4]
-    score = dets[i, -1]
-
-    ax.add_patch(plt.Rectangle((bbox[0], 
-                                bbox[1]),
-                                bbox[2] - bbox[0],
-                                bbox[3] - bbox[1], 
-                                fill=False,
-                                edgecolor='red', 
-                                linewidth=3.5))
-    ax.text(bbox[0], 
-            bbox[1] - 2,
-            '{:s} {:.3f}'.format(class_name, score),
-            bbox=dict(facecolor='blue', alpha=0.5),
-            fontsize=14, 
-            color='white')
-
-  ax.set_title(('{} detections with p({} | box) >= {:.1f}')\
-    .format(class_name, class_name, CONF_THRESH), fontsize=14)
-  plt.axis('off')
-  plt.tight_layout()
-  plt.draw()
-
-
 def detect_for_VOCevaldet(net, 
                           image_filename, 
                           NMS_THRESH=0.3):
-  """Detect object classes in an image using pre-computed object proposals."""
-
   # Load the demo image
   im = cv2.imread(image_filename)
 
@@ -185,12 +146,10 @@ def detect_for_VOCevaldet(net,
   timer.tic()
   scores, boxes = im_detect(net, im)
   timer.toc()
-  #print ('Detection took {:.3f}s for {:d} object proposals').format(timer.total_time, 
-  #                                                                  boxes.shape[0])
+  print ('Detection took {:.3f}s for '
+       '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
   # Visualize detections for each class
-  objects_box = []
-  objects_cls = []
   predicted = []
   for cls_ind, cls in enumerate(CLASSES[1:]):
     cls_ind += 1 # because we skipped background
@@ -222,40 +181,12 @@ def detect_for_VOCevaldet(net,
   return predicted
 
 
-def demo(net, image_name, CONF_THRESH=0.67, NMS_THRESH=0.3):
-  """Detect object classes in an image using pre-computed object proposals."""
-
-  # Load the demo image
-  im = cv2.imread(image_name)
-
-  # Detect all object classes and regress object bounds
-  timer = Timer()
-  timer.tic()
-  scores, boxes = im_detect(net, im)
-  timer.toc()
-  print ('Detection took {:.3f}s for {:d} object proposals').format(timer.total_time, 
-                                                                    boxes.shape[0])
-  # Visualize detections for each class
-  for cls_ind, cls in enumerate(CLASSES[1:]):
-    cls_ind += 1 # because we skipped background
-    cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
-    cls_scores = scores[:, cls_ind]
-    dets = np.hstack((cls_boxes, cls_scores[:, np.newaxis]))\
-             .astype(np.float32)
-    keep = nms(dets, NMS_THRESH)
-    dets = dets[keep, :]
-    vis_detections(im, cls, dets, CONF_THRESH=CONF_THRESH)
-
-
 def parse_args():
-  parser = argparse.ArgumentParser(description='Faster R-CNN demo')
-  parser.add_argument('--img', dest='image', help='Image to demo')
-  parser.add_argument('--thres', dest='thres', help='Threshold of IoU')
-  parser.add_argument('--nms_thres', dest='nms_thres', help='Threshold for NMS')
+  parser = argparse.ArgumentParser(description='Faster R-CNN mAP evaluation')
   parser.add_argument('--output', 
                       dest='result_filename', 
                       help='filename for saving gt and detection results')
-  parser.add_argument('--cfg', 
+  parser.add_argument('--cfg',
                       dest='cfg_file',
                       help='optional config file',
                       default='', 
@@ -280,6 +211,7 @@ if __name__ == '__main__':
     caffe.set_device(0)
     caffe.set_mode_gpu()
     pprint.pprint(cfg)
+    result_filename = args.result_filename
   else:
     raise NotImplemented('configurations using argparse does not permitted')
 
@@ -295,69 +227,79 @@ if __name__ == '__main__':
   im_detect(net, im)
 
   image_filename_prefix = '/storage/product/detection/11st_All/Images'
-  if args.image is None :
-    metafile = os.path.join('/storage/product/detection/11st_All/Annotations', 
-                            'annotations_val.txt')
-    gt = {}
-    predicted_results = []
-    with open(metafile, 'r') as f:
-      for line in f:
-        if line is None: break
-        word = line.strip().split(' ')
-        image_filename = word[0]
+  metafile = os.path.join('/storage/product/detection/11st_All/Annotations', 
+                          'annotations_val.txt')
+  output_fp = open('%s.txt' % result_filename, 'w')
 
-        im_path = os.path.join(image_filename_prefix, 
-                               image_filename + '.jpg')
-        try:
-          #print('count: %d, %s' % (validation_sample_count, im_path)) 
-          predicted = detect_for_VOCevaldet(net, 
-                                            im_path, 
-                                            NMS_THRESH)
+  gt = {}
+  validation_sample_count = 0
+  with open(metafile, 'r') as f:
+    for line in f:
+      if line is None: break
+      word = line.strip().split(' ')
+      image_filename = word[0]
+      num_rois = int(word[1])
+      gt_classes = []
+      gt_boxes = []
+      for i in range(0, num_rois):
+        step = 5*i
+        gt_classes.append(int(word[step+2]))
+        box = np.array([int(word[step+3]), 
+                        int(word[step+4]), 
+                        int(word[step+5]), 
+                        int(word[step+6])])
+        gt_boxes.append(box)
+      gt[image_filename] = {}
+      gt[image_filename]['gt_class_id'] = gt_classes
+      gt[image_filename]['gt_boxes'] = gt_boxes
+      gt[image_filename]['num_rois'] = int(num_rois)
+
+      im_path = os.path.join(image_filename_prefix, 
+                             image_filename + '.jpg')
+      try:
+        predicted = detect_for_VOCevaldet(net, 
+                                          im_path, 
+                                          NMS_THRESH)
             
-        except Exception as err:
-          print('ERROR: %s' % im_path)
-          continue
+      except Exception as err:
+        print('ERROR: %s' % im_path)
+        continue
 
-        num_rois = int(word[1])
-        gt_classes = []
-        gt_boxes = []
-        for i in range(0, num_rois):
-          step = 5*i
-          gt_classes.append(int(word[step+2]))
-          box = np.array([int(word[step+3]), 
-                 int(word[step+4]), 
-                 int(word[step+5]), 
-                 int(word[step+6])])
-          gt_boxes.append(box)
+      # NOTE: write detection results into the result_filename
+      for result_box in predicted:
+        output_fp.write('%s %d %f %d %d %d %d\n' % (result_box[0],
+                                                    result_box[1],
+                                                    result_box[2],
+                                                    result_box[3],
+                                                    result_box[4],
+                                                    result_box[5],
+                                                    result_box[6]))
+        if validation_sample_count % 100 == 0: output_fp.flush()
 
-        #predicted_results.extend(predicted)
-        for result_box in predicted:
-          print('%s %d %f %d %d %d %d' % (result_box[0],
-                                          result_box[1],
-                                          result_box[2],
-                                          result_box[3],
-                                          result_box[4],
-                                          result_box[5],
-                                          result_box[6]))
-          #sys.stdout.flush()
+      validation_sample_count += 1
+      print('count: %d, %s' % (validation_sample_count, im_path)) 
 
-        gt[image_filename] = {}
-        gt[image_filename]['gt_class_id'] = gt_classes
-        gt[image_filename]['gt_boxes'] = gt_boxes
-        gt[image_filename]['num_rois'] = int(num_rois)
+  output_fp.close()
+  # NOTE: save gt data
+  with gzip.open('%s.pkl' % result_filename, 'wb') as pkl_fp:
+    print('Saving gt for all %s' % metafile)
+    pickle.dump(gt, pkl_fp)
 
-    with gzip.open(result_filename, 'wb') as f:
-      print('Saving gt for all %s' % metafile)
-      pickle.dump(gt, f)
-        
-    for IoU in [0.5, 0.6, 0.7, 0.8, 0.9]:
-      mAP = VOCevaldet(gt, 
-                       predicted_results, 
-                       IOU_RATIO=IoU)
-      print 'IoU: %.1f, mAP: %f' % (IoU, mAP)
-  else:
-    im_path = os.path.join(image_filename_prefix, args.image + '.jpg')
-    print im_path
-    demo(net, im_path, CONF_THRESH, NMS_THRESH)
-    plt.show()
+  #########################################################################
+  #########################################################################
+  #########################################################################
+
+  # NOTE: read detection results from the result_filename
+  predicted_results = [tuple(entry.split(' ')) \
+                         for entry in open('%s.txt' % result_filename, 'r')]
+  # NOTE: load gt data
+  with gzip.open('%s.pkl' % result_filename, 'rb') as pkl_fp:
+    gt = pickle.load(pkl_fp)
+   
+  # compute mAP for all category (NOTE: Not per category)
+  for IoU in [0.5, 0.6, 0.7, 0.8, 0.9]:
+    mAP = VOCevaldet(gt, 
+                     predicted_results, 
+                     IOU_RATIO=IoU)
+    print 'IoU: %.1f, mAP: %f' % (IoU, mAP)
 
