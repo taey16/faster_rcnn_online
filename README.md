@@ -66,3 +66,17 @@ message SmoothL1LossParameter {
 
 - Run example script: run_me.sh
 	* `CUDA_VISIBLE_DEVICES=1 nohup python tool/train_val_net.py --rand --cfg /works/faster_rcnn_online/cfg/faster_rcnn_end2end_train_scale_jitter.yml --output ./output > logs.log &`
+
+- Input database format
+```
+dataset_root/
+|- Annotations
+ |- annotations_train.txt
+ |- annotations_val.txt
+|- Images
+```
+
+- Format: annotations_xx.txt
+	* image_filename num_rois class_id x1 y1 x2 y2
+	* example (image_filename : dataset_root/Images/12345.jpg, num_roi : 4)
+	* annotation : 12345 4 class_id x1 y1 x2 y2 class_id x1 y1 x2 y2 class_id x1 y1 x2 y2 class_id x1 y1 x2 y2
