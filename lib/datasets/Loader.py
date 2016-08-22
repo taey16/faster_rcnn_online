@@ -27,6 +27,8 @@ class Loader:
       os.path.join(self.data_path, 'Annotations/annotations_' + self.image_set + '.txt')
     self.load_list_im_roi()
 
+    # NOTE: set it is train-loader or val-loader
+    # scale jitter and flip-jitter only works with train-loader
     self.set_id = image_set
 
 
