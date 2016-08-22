@@ -7,32 +7,34 @@ See README.md for installation instructions before running.
 import os
 import sys
 import argparse
-import numpy as np
 
 import _init_paths
 from fast_rcnn.config import cfg, cfg_from_file
 from fast_rcnn.test import im_detect
 from fast_rcnn.nms_wrapper import nms
 from utils.timer import Timer
-import matplotlib.pyplot as plt
 
 import caffe
 import cv2
+import numpy as np
 
+import pprint
+import matplotlib.pyplot as plt
+
+"""
 # 11st 19 classes
 CLASSES = ('__background__', # always index 0
            'tshirts', 'shirts', 'blouse', 'knit', 'jacket', 
            'onepiece', 'skirt', 'coat', 'cardigan', 'vest', 
            'pants', 'leggings', 'shoes', 'bag', 'swimwear', 
            'hat', 'panties', 'bra', 'socks')
-
 """
+
 # 11st 13 clases
 CLASSES = ('__background__', # always index 0
            'bag', 'bra', 'jacket_coat', 'onepiece', 'pants', 
            'panty', 'shoes', 'skirt', 'swimwear', 'tshirts_shirts_blouse_hoody', 
            'vest', 'knit_cardigan')
-"""
 
 # NOTE: we does'nt need when read configuration from yml file
 NETS = {'vgg16': 
@@ -245,6 +247,7 @@ if __name__ == '__main__':
     NMS_THRESH = cfg.TEST.NMS_THRESH
     caffe.set_device(0)
     caffe.set_mode_gpu()
+    pprint.pprint(cfg)
   else:
     # conf. from argparse
     prototxt = os.path.join('/usrdata/ImageSearch/11st_DB/11st_All/prototxt', PROTXT[args.demo_net][1])
@@ -282,7 +285,7 @@ if __name__ == '__main__':
     with open(metafile, 'r') as f:
       for line in f:
         if line is None: break
-        work = line.strip().split(' ')
+        word = line.strip().split(' ')
         image_filename = word[0]
         num_rois = int(word[1])
         gt_clses = []
