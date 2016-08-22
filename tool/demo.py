@@ -7,6 +7,10 @@ See README.md for installation instructions before running.
 import os
 import sys
 import argparse
+from operator import itemgetter
+import pprint
+import gzip
+import pickle
 
 import _init_paths
 from fast_rcnn.config import cfg, cfg_from_file
@@ -18,7 +22,6 @@ import caffe
 import cv2
 import numpy as np
 
-import pprint
 import matplotlib.pyplot as plt
 
 """
@@ -35,13 +38,6 @@ CLASSES = ('__background__', # always index 0
            'bag', 'bra', 'jacket_coat', 'onepiece', 'pants', 
            'panty', 'shoes', 'skirt', 'swimwear', 'tshirts_shirts_blouse_hoody', 
            'vest', 'knit_cardigan')
-
-# NOTE: we does'nt need when read configuration from yml file
-NETS = {'vgg16': 
-        ('VGG16', '/usrdata2/workspace/faster_rcnn_online/output/eleven_all_vgg16_scale_jitter/eleven_all_train/eleven_all_vgg16_faster_rcnn_anneal_stepsize200000_iter_1600000.caffemodel'),
-        'res50': 
-        ('RES50', '/usrdata2/workspace/faster_rcnn_online/output/eleven_all_res50_scale_jitter/eleven_all_train/eleven_all_ResNet-50_faster_rcnn_anneal_stepsize450000_iter_1600000.caffemodel')}
-PROTXT = {'vgg16': ('VGG16', 'vgg_demo.prototxt'), 'res50':('RES50', 'res_demo.prototxt')}
 
 
 def boxoverlap(gt_box, pred_box):
@@ -65,49 +61,81 @@ def boxoverlap(gt_box, pred_box):
   return o	
 
 
-def calc_precision(gt_boxes, 
-                   gt_clses, 
-                   pred_boxes, 
-                   pred_clses, 
-                   CONF_THRESH=0.67):
+def VOCevaldet(gt_all,
+               predicted_all,
+               IOU_RATIO=0.7):
+  # NOTE: refer to VOCdevkit/VOCcode/VOCevaldet.m
+  # url: http://vision.cs.utexas.edu/voc/VOCcode/VOCevaldet.m
 
-  gt_boxes = np.array(gt_boxes)
-  pred_boxes = np.array(pred_boxes)
+  # sort detections by decreasing confidence
+  predicted_all = sorted(predicted_all, key=itemgetter(2), reverse=True)
 
-  tp = 0
-  fp = 0
-  fn = 0
-  for pred_idx, pred_box in enumerate(pred_boxes):
+  # get # of true-positive boxes
+  npos = 0
+  for image_id, gt in gt_all.iteritems():
+    npos += gt['num_rois']
+
+  tp = np.zeros(len(predicted_all))
+  fp = np.zeros(len(predicted_all))
+  for image_idx, predicted_item in enumerate(predicted_all):
+    # get predicted result
+    image_id = predicted_item[0]
+    predicted_cls_idx = int(predicted_item[1])
+    confidence = float(predicted_item[2])
+    predicted_box = [int(predicted_item[3]), 
+                     int(predicted_item[4]), 
+                     int(predicted_item[5]), 
+                     int(predicted_item[6])]
+    # get ground-truth for the image_id
+    gt = gt_all[image_id]
+    gt_boxes = gt['gt_boxes']
+    num_rois = gt['num_rois']
+    gt_cls_ids = gt['gt_class_id']
+
     max_iou = 0
-    cls_id = None
-    for gt_idx, gt_box in enumerate(gt_boxes):
-      iou = boxoverlap(gt_box, pred_box)
-
+    hit_cls_idx = None
+    for box_idx, gt_box in enumerate(gt_boxes):
+      iou = boxoverlap(gt_box, predicted_box)
       if max_iou < iou:
         max_iou = iou
-        cls_id = gt_clses[gt_idx]
+        hit_cls_idx = gt_cls_ids[box_idx]
 
-      if max_iou > float(CONF_THRESH) and \
-         cls_id == pred_clses[pred_idx]:
-      #if max_iou > float(CONF_THRESH):
-        tp += 1
+    if max_iou > IOU_RATIO:
+      #if confidence > CONF_THRESH and predicted_cls_idx == hit_cls_idx:
+      if predicted_cls_idx == hit_cls_idx:
+        tp[image_idx] = 1
+      else: 
+        # false positive (multiple detection)
+        fp[image_idx] = 1
+    else: 
+        # false positive
+      fp[image_idx] = 1
 
-  # get tp and fn
-  fp = len(pred_boxes) - tp
-  fn = len(gt_boxes) - tp
+  tp = np.cumsum(tp) 
+  fp = np.cumsum(fp)
 
-  # compute precision
-  if(fp+tp) == 0: precision = 0.
-  else: precision = float(tp) / (fp + tp)
+  recall = tp / npos # broadcast
+  precision = np.divide(tp, fp+tp) # elewise divice
 
-  # compute recall
-  if(tp+fn) == 0: recall = 0.
-  else: recall = float(tp) / (tp + fn)
+  average_precision=0.0;
+  for threshold in np.arange(0,1,0.1):
+    p = 0.0
+    # oriignal matlab voc eval code
+    #p = np.max(precision(recall>=threshold))
+    #if p == None:
+    #  p = 0.0
+    # NOTE: python converted
+    for idx, rec in enumerate(recall):
+      if rec > threshold:
+        temp_p = precision[idx]
+        if p < temp_p:
+          p = temp_p
 
-  print 'tp : %d, fp : %d, fn : %d, precision : %f, recall : %f'%\
-        (tp, fp, fn, precision, recall)
+    average_precision += p / 11.0
 
-  return precision, recall
+  print 'average_precision: %f'% (average_precision)
+
+  return average_precision
 
 
 def vis_detections(im, class_name, dets, CONF_THRESH=0.5):
@@ -144,7 +172,9 @@ def vis_detections(im, class_name, dets, CONF_THRESH=0.5):
   plt.draw()
 
 
-def detect(net, image_filename, CONF_THRESH=0.67, NMS_THRESH=0.3):
+def detect_for_VOCevaldet(net, 
+                          image_filename, 
+                          NMS_THRESH=0.3):
   """Detect object classes in an image using pre-computed object proposals."""
 
   # Load the demo image
@@ -155,12 +185,13 @@ def detect(net, image_filename, CONF_THRESH=0.67, NMS_THRESH=0.3):
   timer.tic()
   scores, boxes = im_detect(net, im)
   timer.toc()
-  print ('Detection took {:.3f}s for '
-       '{:d} object proposals').format(timer.total_time, boxes.shape[0])
+  #print ('Detection took {:.3f}s for {:d} object proposals').format(timer.total_time, 
+  #                                                                  boxes.shape[0])
 
   # Visualize detections for each class
   objects_box = []
   objects_cls = []
+  predicted = []
   for cls_ind, cls in enumerate(CLASSES[1:]):
     cls_ind += 1 # because we skipped background
     cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
@@ -169,16 +200,26 @@ def detect(net, image_filename, CONF_THRESH=0.67, NMS_THRESH=0.3):
              .astype(np.float32)
     keep = nms(dets, NMS_THRESH)
     dets = dets[keep, :]
-    inds = np.where(dets[:, -1] >= CONF_THRESH)[0]
+    # NOTE: In evaluation mode, all of the boxes should be considered
+    inds = np.where(dets[:, -1] >= 0.0)[0]
+
     if len(inds) == 0:
       continue	
 
     for i in inds:
-      bbox = dets[i,:4].astype(np.int64)
-      objects_cls.append(cls_ind)
-      objects_box.append(bbox)
+      bbox = dets[i,:]
+      # NOTE: prediction result for evaluation
+      # Format: list of tuples
+      # tuple format: (image_id, cls_ind, confidence, x1, y1, x2, y2)
+      predicted.append((image_filename.split('/')[-1][0:-4], 
+                        int(cls_ind), 
+                        float(bbox[-1]), 
+                        int(bbox[0]), 
+                        int(bbox[1]), 
+                        int(bbox[2]), 
+                        int(bbox[3])))
   
-  return objects_cls, objects_box
+  return predicted
 
 
 def demo(net, image_name, CONF_THRESH=0.67, NMS_THRESH=0.3):
@@ -207,23 +248,13 @@ def demo(net, image_name, CONF_THRESH=0.67, NMS_THRESH=0.3):
 
 
 def parse_args():
-  """Parse input arguments."""
   parser = argparse.ArgumentParser(description='Faster R-CNN demo')
-  parser.add_argument('--gpu', 
-                      dest='gpu_id', 
-                      help='GPU device id to use [0]',
-                      default=0, 
-                      type=int)
-  parser.add_argument('--cpu', 
-                      dest='cpu_mode',
-                      help='Use CPU mode (overrides --gpu)',
-                      action='store_true')
-  parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16]',
-                      choices=NETS.keys(), default='vgg16')
   parser.add_argument('--img', dest='image', help='Image to demo')
   parser.add_argument('--thres', dest='thres', help='Threshold of IoU')
   parser.add_argument('--nms_thres', dest='nms_thres', help='Threshold for NMS')
-
+  parser.add_argument('--output', 
+                      dest='result_filename', 
+                      help='filename for saving gt and detection results')
   parser.add_argument('--cfg', 
                       dest='cfg_file',
                       help='optional config file',
@@ -235,7 +266,8 @@ def parse_args():
   return args
 
 if __name__ == '__main__':
-  import pdb; pdb.set_trace()
+  #import pdb; pdb.set_trace()
+
   args = parse_args()
   # NOTE: get configuration from yml file or argparse
   if args.cfg_file is not None:
@@ -249,17 +281,7 @@ if __name__ == '__main__':
     caffe.set_mode_gpu()
     pprint.pprint(cfg)
   else:
-    # conf. from argparse
-    prototxt = os.path.join('/usrdata/ImageSearch/11st_DB/11st_All/prototxt', PROTXT[args.demo_net][1])
-    caffemodel = NETS[args.demo_net][1]
-    CONF_THRESH = args.thres
-    NMS_THRESH = args.nms_thres
-    if args.cpu_mode:
-      caffe.set_mode_cpu()
-    else:
-      caffe.set_device(args.gpu_id)
-      caffe.set_mode_gpu()
-      cfg.GPU_ID = args.gpu_id
+    raise NotImplemented('configurations using argparse does not permitted')
 
   if not os.path.isfile(caffemodel):
     raise IOError(('{:s} not found.').format(caffemodel))
@@ -269,55 +291,70 @@ if __name__ == '__main__':
   print '\n\nLoaded network {:s}'.format(caffemodel)
 
   # Warmup on a dummy image
-  #im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
-  #for i in xrange(2):
-  #  _, _= im_detect(net, im)
-  im = 2 * np.ones((300, 500, 3), dtype=np.uint8)
+  im = 1 * np.ones((300, 500, 3), dtype=np.uint8)
   im_detect(net, im)
 
   image_filename_prefix = '/storage/product/detection/11st_All/Images'
   if args.image is None :
     metafile = os.path.join('/storage/product/detection/11st_All/Annotations', 
                             'annotations_val.txt')
-    total_precision = 0
-    total_recall = 0
-    num_query = 0
+    gt = {}
+    predicted_results = []
     with open(metafile, 'r') as f:
       for line in f:
         if line is None: break
         word = line.strip().split(' ')
         image_filename = word[0]
-        num_rois = int(word[1])
-        gt_clses = []
-        gt_boxes = []
-        for i in range(0, num_rois):
-          step = 5*i
-          gt_clses.append(int(word[step+2]))
-          box = [int(word[step+3]), 
-                 int(word[step+4]), 
-                 int(word[step+5]), 
-                 int(word[step+6])]
-          box = np.array(box)
-          gt_boxes.append(box)
 
         im_path = os.path.join(image_filename_prefix, 
                                image_filename + '.jpg')
-        print im_path
-        pred_clses, pred_boxes = detect(net, im_path, CONF_THRESH, NMS_THRESH)
+        try:
+          #print('count: %d, %s' % (validation_sample_count, im_path)) 
+          predicted = detect_for_VOCevaldet(net, 
+                                            im_path, 
+                                            NMS_THRESH)
+            
+        except Exception as err:
+          print('ERROR: %s' % im_path)
+          continue
 
-      precision, recall = calc_precision(gt_boxes, 
-                                         gt_clses, 
-                                         pred_boxes, 
-                                         pred_clses, 
-                                         CONF_THRESH)
-      total_precision += precision
-      total_recall += recall
-      num_query += 1
-      print 'total_precision : %f, total_recall : %f, num_query : %d' %\
-              (total_precision, total_recall, num_query)
-    print 'precision : %f, recall : %f' %\
-            ((float(total_precision) / num_query) * 100, 
-             (float(total_recall) / num_query) * 100)
+        num_rois = int(word[1])
+        gt_classes = []
+        gt_boxes = []
+        for i in range(0, num_rois):
+          step = 5*i
+          gt_classes.append(int(word[step+2]))
+          box = np.array([int(word[step+3]), 
+                 int(word[step+4]), 
+                 int(word[step+5]), 
+                 int(word[step+6])])
+          gt_boxes.append(box)
+
+        #predicted_results.extend(predicted)
+        for result_box in predicted:
+          print('%s %d %f %d %d %d %d' % (result_box[0],
+                                          result_box[1],
+                                          result_box[2],
+                                          result_box[3],
+                                          result_box[4],
+                                          result_box[5],
+                                          result_box[6]))
+          #sys.stdout.flush()
+
+        gt[image_filename] = {}
+        gt[image_filename]['gt_class_id'] = gt_classes
+        gt[image_filename]['gt_boxes'] = gt_boxes
+        gt[image_filename]['num_rois'] = int(num_rois)
+
+    with gzip.open(result_filename, 'wb') as f:
+      print('Saving gt for all %s' % metafile)
+      pickle.dump(gt, f)
+        
+    for IoU in [0.5, 0.6, 0.7, 0.8, 0.9]:
+      mAP = VOCevaldet(gt, 
+                       predicted_results, 
+                       IOU_RATIO=IoU)
+      print 'IoU: %.1f, mAP: %f' % (IoU, mAP)
   else:
     im_path = os.path.join(image_filename_prefix, args.image + '.jpg')
     print im_path
