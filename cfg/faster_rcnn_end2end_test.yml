@@ -9,7 +9,8 @@ TRAIN:
   PROPOSAL_METHOD: gt
 TEST:
   HAS_RPN: True
-  PROTOTXT: /storage/product/detection/11st_All/prototxt/test.prototxt
+  #PROTOTXT: /storage/product/detection/11st_All/prototxt/test.prototxt
+  PROTOTXT: /works/faster_rcnn_online/prototxt/vgg16/test.prototxt
   CAFFE_MODEL: /storage/product/detection/11st_All/output/eleven_all_scale_jitter/eleven_all_train/eleven_all_vgg16_faster_rcnn_annel_stepsize200000_iter_1800000.caffemodel
   SCALES: [600]
   CONF_THRESH: 0.67 #0.6 #0.8

@@ -108,6 +108,7 @@ class Loader:
     height= im.shape[0]
     width = im.shape[1]
     roidb = self.load_roi(image_index)
+    # NOTE: flip jittering in training phase ONLY
     if self.set_id == 'train':
       flipped = random.randint(0, 1)
       if flipped: 

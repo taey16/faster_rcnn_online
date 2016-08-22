@@ -69,7 +69,10 @@ def _get_image_blob(im, roidb, target_size):
   im_scales = []
   for i in xrange(num_images):
     #target_size = cfg.TRAIN.SCALES[scale_inds[i]]
-    im, im_scale = prep_im_for_blob(im, cfg.PIXEL_MEANS, target_size, cfg.TRAIN.MAX_SIZE)
+    im, im_scale = prep_im_for_blob(im, 
+                                    cfg.PIXEL_MEANS, 
+                                    target_size, 
+                                    cfg.TRAIN.MAX_SIZE)
     im_scales.append(im_scale)
     processed_ims.append(im)
 
