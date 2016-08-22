@@ -34,11 +34,11 @@ CLASSES = ('__background__', # always index 0
            'vest', 'knit_cardigan')
 """
 
+# NOTE: we does'nt need when read configuration from yml file
 NETS = {'vgg16': 
         ('VGG16', '/usrdata2/workspace/faster_rcnn_online/output/eleven_all_vgg16_scale_jitter/eleven_all_train/eleven_all_vgg16_faster_rcnn_anneal_stepsize200000_iter_1600000.caffemodel'),
         'res50': 
         ('RES50', '/usrdata2/workspace/faster_rcnn_online/output/eleven_all_res50_scale_jitter/eleven_all_train/eleven_all_ResNet-50_faster_rcnn_anneal_stepsize450000_iter_1600000.caffemodel')}
-
 PROTXT = {'vgg16': ('VGG16', 'vgg_demo.prototxt'), 'res50':('RES50', 'res_demo.prototxt')}
 
 
@@ -63,44 +63,54 @@ def boxoverlap(gt_box, pred_box):
   return o	
 
 
-def calc_precision(gt_boxes, gt_clses, pred_boxes, pred_clses, thres):
+def calc_precision(gt_boxes, 
+                   gt_clses, 
+                   pred_boxes, 
+                   pred_clses, 
+                   CONF_THRESH=0.67):
+
   gt_boxes = np.array(gt_boxes)
   pred_boxes = np.array(pred_boxes)
 
   tp = 0
   fp = 0
   fn = 0
-
   for pred_idx, pred_box in enumerate(pred_boxes):
     max_iou = 0
-    cls = None
+    cls_id = None
     for gt_idx, gt_box in enumerate(gt_boxes):
       iou = boxoverlap(gt_box, pred_box)
 
       if max_iou < iou:
         max_iou = iou
-        cls = gt_clses[gt_idx]
+        cls_id = gt_clses[gt_idx]
 
-      #	if max_iou > float(thres) and cls == pred_clses[pred_idx]:
-      if max_iou > float(thres):
+      if max_iou > float(CONF_THRESH) and \
+         cls_id == pred_clses[pred_idx]:
+      #if max_iou > float(CONF_THRESH):
         tp += 1
 
+  # get tp and fn
   fp = len(pred_boxes) - tp
   fn = len(gt_boxes) - tp
 
+  # compute precision
   if(fp+tp) == 0: precision = 0.
   else: precision = float(tp) / (fp + tp)
 
+  # compute recall
   if(tp+fn) == 0: recall = 0.
   else: recall = float(tp) / (tp + fn)
 
-  # print 'tp : %d, fp : %d, fn : %d, precision : %f, recall : %f'%(tp,fp,fn,precision,recall)
+  print 'tp : %d, fp : %d, fn : %d, precision : %f, recall : %f'%\
+        (tp, fp, fn, precision, recall)
+
   return precision, recall
 
 
-def vis_detections(im, class_name, dets, thresh=0.5):
+def vis_detections(im, class_name, dets, CONF_THRESH=0.5):
   """Draw detected bounding boxes."""
-  inds = np.where(dets[:, -1] >= thresh)[0]
+  inds = np.where(dets[:, -1] >= CONF_THRESH)[0]
   if len(inds) == 0:
     return
   print CLASSES.index(class_name)
@@ -126,17 +136,17 @@ def vis_detections(im, class_name, dets, thresh=0.5):
             color='white')
 
   ax.set_title(('{} detections with p({} | box) >= {:.1f}')\
-    .format(class_name, class_name, thresh), fontsize=14)
+    .format(class_name, class_name, CONF_THRESH), fontsize=14)
   plt.axis('off')
   plt.tight_layout()
   plt.draw()
 
 
-def detect(net, image_name):
+def detect(net, image_filename, CONF_THRESH=0.67, NMS_THRESH=0.3):
   """Detect object classes in an image using pre-computed object proposals."""
 
   # Load the demo image
-  im = cv2.imread(image_name)
+  im = cv2.imread(image_filename)
 
   # Detect all object classes and regress object bounds
   timer = Timer()
@@ -147,8 +157,6 @@ def detect(net, image_name):
        '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
   # Visualize detections for each class
-  CONF_THRESH = 0.8
-  NMS_THRESH = 0.3
   objects_box = []
   objects_cls = []
   for cls_ind, cls in enumerate(CLASSES[1:]):
@@ -163,16 +171,15 @@ def detect(net, image_name):
     if len(inds) == 0:
       continue	
 
-  for i in inds:
-    bbox = dets[i, :4]
-    bbox = bbox.astype(np.int64)
-    objects_cls.append(cls_ind)
-    objects_box.append(bbox)
+    for i in inds:
+      bbox = dets[i,:4].astype(np.int64)
+      objects_cls.append(cls_ind)
+      objects_box.append(bbox)
   
   return objects_cls, objects_box
 
 
-def demo(net, image_name):
+def demo(net, image_name, CONF_THRESH=0.67, NMS_THRESH=0.3):
   """Detect object classes in an image using pre-computed object proposals."""
 
   # Load the demo image
@@ -185,10 +192,7 @@ def demo(net, image_name):
   timer.toc()
   print ('Detection took {:.3f}s for {:d} object proposals').format(timer.total_time, 
                                                                     boxes.shape[0])
-
   # Visualize detections for each class
-  CONF_THRESH = 0.8
-  NMS_THRESH = 0.3
   for cls_ind, cls in enumerate(CLASSES[1:]):
     cls_ind += 1 # because we skipped background
     cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
@@ -197,7 +201,8 @@ def demo(net, image_name):
              .astype(np.float32)
     keep = nms(dets, NMS_THRESH)
     dets = dets[keep, :]
-    vis_detections(im, cls, dets, thresh=CONF_THRESH)
+    vis_detections(im, cls, dets, CONF_THRESH=CONF_THRESH)
+
 
 def parse_args():
   """Parse input arguments."""
@@ -212,9 +217,10 @@ def parse_args():
                       help='Use CPU mode (overrides --gpu)',
                       action='store_true')
   parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16]',
-            choices=NETS.keys(), default='vgg16')
+                      choices=NETS.keys(), default='vgg16')
   parser.add_argument('--img', dest='image', help='Image to demo')
   parser.add_argument('--thres', dest='thres', help='Threshold of IoU')
+  parser.add_argument('--nms_thres', dest='nms_thres', help='Threshold for NMS')
 
   parser.add_argument('--cfg', 
                       dest='cfg_file',
@@ -235,10 +241,16 @@ if __name__ == '__main__':
     cfg_from_file(args.cfg_file)
     prototxt = cfg.TEST.PROTOTXT
     caffemodel = cfg.TEST.CAFFE_MODEL
+    CONF_THRESH = cfg.TEST.CONF_THRESH
+    NMS_THRESH = cfg.TEST.NMS_THRESH
+    caffe.set_device(0)
+    caffe.set_mode_gpu()
   else:
     # conf. from argparse
     prototxt = os.path.join('/usrdata/ImageSearch/11st_DB/11st_All/prototxt', PROTXT[args.demo_net][1])
     caffemodel = NETS[args.demo_net][1]
+    CONF_THRESH = args.thres
+    NMS_THRESH = args.nms_thres
     if args.cpu_mode:
       caffe.set_mode_cpu()
     else:
@@ -254,23 +266,24 @@ if __name__ == '__main__':
   print '\n\nLoaded network {:s}'.format(caffemodel)
 
   # Warmup on a dummy image
-  im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
-  for i in xrange(2):
-    _, _= im_detect(net, im)
+  #im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
+  #for i in xrange(2):
+  #  _, _= im_detect(net, im)
+  im = 2 * np.ones((300, 500, 3), dtype=np.uint8)
+  im_detect(net, im)
 
+  image_filename_prefix = '/storage/product/detection/11st_All/Images'
   if args.image is None :
-    print args.thres
-    metafile = os.path.join('/usrdata/ImageSearch/11st_DB/11st_All/Annotations', 
-                            'annotations_test.txt')
+    metafile = os.path.join('/storage/product/detection/11st_All/Annotations', 
+                            'annotations_val.txt')
     total_precision = 0
     total_recall = 0
     num_query = 0
     with open(metafile, 'r') as f:
       for line in f:
         if line is None: break
-        line = line.rstrip('\n')
-        word = line.split(' ')
-        image_name = word[0]
+        work = line.strip().split(' ')
+        image_filename = word[0]
         num_rois = int(word[1])
         gt_clses = []
         gt_boxes = []
@@ -284,16 +297,16 @@ if __name__ == '__main__':
           box = np.array(box)
           gt_boxes.append(box)
 
-        im_path = os.path.join('/usrdata/ImageSearch/11st_DB/11st_All/Images', 
-                               image_name + '.jpg')
+        im_path = os.path.join(image_filename_prefix, 
+                               image_filename + '.jpg')
         print im_path
-        pred_clses, pred_boxes = detect(net, im_path)
+        pred_clses, pred_boxes = detect(net, im_path, CONF_THRESH, NMS_THRESH)
 
       precision, recall = calc_precision(gt_boxes, 
                                          gt_clses, 
                                          pred_boxes, 
                                          pred_clses, 
-                                         args.thres)
+                                         CONF_THRESH)
       total_precision += precision
       total_recall += recall
       num_query += 1
@@ -303,9 +316,8 @@ if __name__ == '__main__':
             ((float(total_precision) / num_query) * 100, 
              (float(total_recall) / num_query) * 100)
   else:
-    im_path = os.path.join('/usrdata/ImageSearch/11st_DB/11st_All/Images', 
-                           args.image + '.jpg')
+    im_path = os.path.join(image_filename_prefix, args.image + '.jpg')
     print im_path
-    demo(net, im_path)
+    demo(net, im_path, CONF_THRESH, NMS_THRESH)
     plt.show()
 
