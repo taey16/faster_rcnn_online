@@ -64,10 +64,10 @@ message SmoothL1LossParameter {
 - Build caffe
 	* Check `Makefile.config` with `WITH_PYTHON_LAYER := 1` and `make pycaffe`
 
-- Run example script: run_me.sh
-	* `CUDA_VISIBLE_DEVICES=1 nohup python tool/train_val_net.py --rand --cfg /works/faster_rcnn_online/cfg/faster_rcnn_end2end_train_scale_jitter.yml --output ./output > logs.log &`
+# Run example script: run_me.sh
+- `CUDA_VISIBLE_DEVICES=1 nohup python tool/train_val_net.py --rand --cfg /works/faster_rcnn_online/cfg/faster_rcnn_end2end_train_scale_jitter.yml --output ./output > logs.log &`
 
-- Input database format
+# Input database format
 ```
 dataset_root/
 |- Annotations
