@@ -12,7 +12,8 @@ from fast_rcnn.bbox_transform import bbox_transform
 
 """
 Online data loader class which is acting as the 
-roidb.py in original py-faster-rcnn
+roidb.py in original py-faster-rcnn @taey16
+taey1600@gmail.com
 """
 
 class Loader:
