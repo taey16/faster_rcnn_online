@@ -50,7 +50,7 @@ def boxoverlap(gt_box, pred_box):
   aarea = (gt_box[2] - gt_box[0] + 1) * (gt_box[3] - gt_box[1] + 1)
   barea = (pred_box[2] - pred_box[0] + 1) * (pred_box[3] - pred_box[1] + 1)
 
-  o = float(inter) / float(aarea + barea - inter)
+  o = float(inter) / float(aarea + barea - inter + 1e-10)
 
   if(w <= 0): o = 0
   if(h <= 0): o = 0
@@ -105,22 +105,24 @@ def VOCevaldet(gt_all,
         # false positive (multiple detection)
         fp[image_idx] = 1
     else: 
-        # false positive
+      # false positive
       fp[image_idx] = 1
 
   tp = np.cumsum(tp) 
   fp = np.cumsum(fp)
 
   recall = tp / npos # broadcast
-  precision = np.divide(tp, fp+tp) # elewise divice
+  precision = np.divide(tp, fp+tp) # ele-wise divide
 
   average_precision=0.0;
   for threshold in np.arange(0,1,0.1):
     p = 0.0
+
     # oriignal matlab voc eval code
     #p = np.max(precision(recall>=threshold))
     #if p == None:
     #  p = 0.0
+
     # NOTE: python converted
     for idx, rec in enumerate(recall):
       if rec > threshold:
@@ -180,44 +182,11 @@ def detect_for_VOCevaldet(net,
   
   return predicted
 
-
-def parse_args():
-  parser = argparse.ArgumentParser(description='Faster R-CNN mAP evaluation')
-  parser.add_argument('--output', 
-                      dest='result_filename', 
-                      help='filename for saving gt and detection results')
-  parser.add_argument('--cfg',
-                      dest='cfg_file',
-                      help='optional config file',
-                      default='', 
-                      type=str)
-
-  args = parser.parse_args()
-
-  return args
-
-if __name__ == '__main__':
-  #import pdb; pdb.set_trace()
-
-  args = parse_args()
-  # NOTE: get configuration from yml file or argparse
-  if args.cfg_file is not None:
-    # conf. from yml
-    cfg_from_file(args.cfg_file)
-    prototxt = cfg.TEST.PROTOTXT
-    caffemodel = cfg.TEST.CAFFE_MODEL
-    CONF_THRESH = cfg.TEST.CONF_THRESH
-    NMS_THRESH = cfg.TEST.NMS_THRESH
-    caffe.set_device(0)
-    caffe.set_mode_gpu()
-    pprint.pprint(cfg)
-    result_filename = args.result_filename
-  else:
-    raise NotImplemented('configurations using argparse does not permitted')
-
-  if not os.path.isfile(caffemodel):
-    raise IOError(('{:s} not found.').format(caffemodel))
-
+def run_detector_for_evaluate(prototxt, 
+                              caffemodel, 
+                              image_filename_prefix,
+                              annotation_file,
+                              result_filename):
   # NOTE: load faster-rcnn model
   net = caffe.Net(prototxt, caffemodel, caffe.TEST)
   print '\n\nLoaded network {:s}'.format(caffemodel)
@@ -226,33 +195,32 @@ if __name__ == '__main__':
   im = 1 * np.ones((300, 500, 3), dtype=np.uint8)
   im_detect(net, im)
 
-  image_filename_prefix = '/storage/product/detection/11st_All/Images'
-  metafile = os.path.join('/storage/product/detection/11st_All/Annotations', 
-                          'annotations_val.txt')
+  # NOTE: open fp for saving detection results
   output_fp = open('%s.txt' % result_filename, 'w')
 
   gt = {}
   validation_sample_count = 0
-  with open(metafile, 'r') as f:
+  with open(annotation_file, 'r') as f:
     for line in f:
       if line is None: break
       word = line.strip().split(' ')
       image_filename = word[0]
       num_rois = int(word[1])
-      gt_classes = []
+      gt_class_id = []
       gt_boxes = []
       for i in range(0, num_rois):
         step = 5*i
-        gt_classes.append(int(word[step+2]))
+        gt_class_id.append(int(word[step+2]))
         box = np.array([int(word[step+3]), 
                         int(word[step+4]), 
                         int(word[step+5]), 
                         int(word[step+6])])
         gt_boxes.append(box)
+
       gt[image_filename] = {}
-      gt[image_filename]['gt_class_id'] = gt_classes
+      gt[image_filename]['gt_class_id'] = gt_class_id
       gt[image_filename]['gt_boxes'] = gt_boxes
-      gt[image_filename]['num_rois'] = int(num_rois)
+      gt[image_filename]['num_rois'] = num_rois
 
       im_path = os.path.join(image_filename_prefix, 
                              image_filename + '.jpg')
@@ -279,27 +247,79 @@ if __name__ == '__main__':
       validation_sample_count += 1
       print('count: %d, %s' % (validation_sample_count, im_path)) 
 
+  # close fp for result_filename.txt
   output_fp.close()
   # NOTE: save gt data
   with gzip.open('%s.pkl' % result_filename, 'wb') as pkl_fp:
     print('Saving gt for all %s' % metafile)
     pickle.dump(gt, pkl_fp)
 
-  #########################################################################
-  #########################################################################
-  #########################################################################
 
-  # NOTE: read detection results from the result_filename
-  predicted_results = [tuple(entry.split(' ')) \
-                         for entry in open('%s.txt' % result_filename, 'r')]
-  # NOTE: load gt data
-  with gzip.open('%s.pkl' % result_filename, 'rb') as pkl_fp:
-    gt = pickle.load(pkl_fp)
+
+def parse_args():
+  parser = argparse.ArgumentParser(description='Faster R-CNN mAP evaluation')
+  parser.add_argument('--cfg',
+                      dest='cfg_file',
+                      help='optional config file',
+                      default='', 
+                      type=str)
+  parser.add_argument('--output', 
+                      dest='result_filename', 
+                      help='filename for saving gt and detection results')
+  group = parser.add_mutually_exclusive_group()
+  group.add_argument("-predict", "--predict", action="store_true", default=False,
+                     help="predict given annotation_text.txt" "(default: %(defaults)s)")
+  group.add_argument("-eval", "--eval", action="store_true", default=False,
+                     help="evaluate given result_filename.txt" "(default: %(defaults)s)")
+  args = parser.parse_args()
+  return args
+
+
+if __name__ == '__main__':
+  args = parse_args()
+  if args.cfg_file is not None:
+    # conf. from yml
+    cfg_from_file(args.cfg_file)
+    prototxt = cfg.TEST.PROTOTXT
+    caffemodel = cfg.TEST.CAFFE_MODEL
+    CONF_THRESH = cfg.TEST.CONF_THRESH
+    NMS_THRESH = cfg.TEST.NMS_THRESH
+    caffe.set_device(0)
+    caffe.set_mode_gpu()
+    pprint.pprint(cfg)
+    result_filename = args.result_filename
+  else:
+    raise Exception('Configuration file i.e. *.yml file should be given')
+
+  if not os.path.isfile(caffemodel):
+    raise IOError(('{:s} not found.').format(caffemodel))
+
+  if args.predict:
+    image_filename_prefix = '/storage/product/detection/11st_All/Images'
+    annotation_file = os.path.join('/storage/product/detection/11st_All/Annotations', 
+                                   'annotations_val.txt')
+    #import pdb; pdb.set_trace()
+    run_detector_for_evaluate(prototxt, 
+                              caffemodel, 
+                              image_filename_prefix,
+                              annotation_file,
+                              result_filename)
+  elif args.eval:
+    import pdb; pdb.set_trace()
+    assert(os.path.exists('%s.txt' % result_filename))
+    assert(os.path.exists('%s.pkl' % result_filename))
+
+    # NOTE: read detection results from the result_filename
+    predicted_results = [tuple(entry.split(' ')) \
+                           for entry in open('%s.txt' % result_filename, 'r')]
+    # NOTE: load gt data
+    with gzip.open('%s.pkl' % result_filename, 'rb') as pkl_fp:
+      gt = pickle.load(pkl_fp)
    
-  # compute mAP for all category (NOTE: Not per category)
-  for IoU in [0.5, 0.6, 0.7, 0.8, 0.9]:
-    mAP = VOCevaldet(gt, 
-                     predicted_results, 
-                     IOU_RATIO=IoU)
-    print 'IoU: %.1f, mAP: %f' % (IoU, mAP)
+    # compute mAP for all category (NOTE: Not per category)
+    for IoU in [0.5, 0.6, 0.7, 0.8, 0.9]:
+      mAP = VOCevaldet(gt, 
+                       predicted_results, 
+                       IOU_RATIO=IoU)
+      print 'IoU: %.1f, mAP: %f' % (IoU, mAP)
 
