@@ -321,7 +321,7 @@ if __name__ == '__main__':
     image_filename_prefix = '/storage/product/detection/11st_All/Images'
     annotation_file = os.path.join('/storage/product/detection/11st_All/Annotations', 
                                    'annotations_val.txt')
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     # NOTE: save gt from annotation file first
     if gt_filename == '':
       save_gt_from_annotation_file(annotation_file, gt_filename)
