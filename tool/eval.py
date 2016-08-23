@@ -136,7 +136,7 @@ def VOCevaldet(gt_all,
 
   return average_precision
 
-def save_gt_from_annotation_file(annotation_file, result_filename):
+def save_gt_from_annotation_file(annotation_file):
   gt = {}
   with open(annotation_file, 'r') as f:
     for line in f:
@@ -160,8 +160,8 @@ def save_gt_from_annotation_file(annotation_file, result_filename):
       gt[image_filename]['gt_boxes'] = gt_boxes
       gt[image_filename]['num_rois'] = num_rois
 
-  # NOTE: save gt data
-  with gzip.open('%s.pkl' % result_filename, 'wb') as pkl_fp:
+  # NOTE: save gt data for 11st 12category dataset
+  with gzip.open('%vgg16_vocdeteval.pkl', 'wb') as pkl_fp:
     print('Saving gt for all %s' % annotation_file)
     pickle.dump(gt, pkl_fp)
     print('Saving Done' % annotation_file)
@@ -324,7 +324,7 @@ if __name__ == '__main__':
     #import pdb; pdb.set_trace()
     # NOTE: save gt from annotation file first
     if gt_filename == '':
-      save_gt_from_annotation_file(annotation_file, gt_filename)
+      save_gt_from_annotation_file(annotation_file)
     else:
       # NOTE: load gt data for guided detection
       with gzip.open('%s.pkl' % gt_filename, 'rb') as pkl_fp:
