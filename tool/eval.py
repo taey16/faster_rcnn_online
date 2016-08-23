@@ -136,10 +136,42 @@ def VOCevaldet(gt_all,
 
   return average_precision
 
+def save_gt_from_annotation_file(annotation_file, result_filename):
+  gt = {}
+  with open(annotation_file, 'r') as f:
+    for line in f:
+      if line is None: break
+      word = line.strip().split(' ')
+      image_filename = word[0]
+      num_rois = int(word[1])
+      gt_class_id = []
+      gt_boxes = []
+      for i in range(0, num_rois):
+        step = 5*i
+        gt_class_id.append(int(word[step+2]))
+        box = np.array([int(word[step+3]), 
+                        int(word[step+4]), 
+                        int(word[step+5]), 
+                        int(word[step+6])])
+        gt_boxes.append(box)
+
+      gt[image_filename] = {}
+      gt[image_filename]['gt_class_id'] = gt_class_id
+      gt[image_filename]['gt_boxes'] = gt_boxes
+      gt[image_filename]['num_rois'] = num_rois
+
+  # NOTE: save gt data
+  with gzip.open('%s.pkl' % result_filename, 'wb') as pkl_fp:
+    print('Saving gt for all %s' % annotation_file)
+    pickle.dump(gt, pkl_fp)
+    print('Saving Done' % annotation_file)
+
 
 def detect_for_VOCevaldet(net, 
                           image_filename, 
-                          NMS_THRESH=0.3):
+                          NMS_THRESH=0.3,
+                          guided_detection=False,
+                          gt=None):
   # Load the demo image
   im = cv2.imread(image_filename)
 
@@ -155,6 +187,8 @@ def detect_for_VOCevaldet(net,
   predicted = []
   for cls_ind, cls in enumerate(CLASSES[1:]):
     cls_ind += 1 # because we skipped background
+    if guided_detection and not cls_ind in gt['gt_class_id']:
+      continue
     cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
     cls_scores = scores[:, cls_ind]
     dets = np.hstack((cls_boxes, cls_scores[:, np.newaxis]))\
@@ -186,7 +220,10 @@ def run_detector_for_evaluate(prototxt,
                               caffemodel, 
                               image_filename_prefix,
                               annotation_file,
-                              result_filename):
+                              result_filename,
+                              guided_detection=False,
+                              gt_all=None):
+
   # NOTE: load faster-rcnn model
   net = caffe.Net(prototxt, caffemodel, caffe.TEST)
   print '\n\nLoaded network {:s}'.format(caffemodel)
@@ -195,65 +232,43 @@ def run_detector_for_evaluate(prototxt,
   im = 1 * np.ones((300, 500, 3), dtype=np.uint8)
   im_detect(net, im)
 
-  # NOTE: open fp for saving detection results
-  output_fp = open('%s.txt' % result_filename, 'w')
-
-  gt = {}
   validation_sample_count = 0
-  with open(annotation_file, 'r') as f:
-    for line in f:
-      if line is None: break
-      word = line.strip().split(' ')
-      image_filename = word[0]
-      num_rois = int(word[1])
-      gt_class_id = []
-      gt_boxes = []
-      for i in range(0, num_rois):
-        step = 5*i
-        gt_class_id.append(int(word[step+2]))
-        box = np.array([int(word[step+3]), 
-                        int(word[step+4]), 
-                        int(word[step+5]), 
-                        int(word[step+6])])
-        gt_boxes.append(box)
-
-      gt[image_filename] = {}
-      gt[image_filename]['gt_class_id'] = gt_class_id
-      gt[image_filename]['gt_boxes'] = gt_boxes
-      gt[image_filename]['num_rois'] = num_rois
-
-      im_path = os.path.join(image_filename_prefix, 
-                             image_filename + '.jpg')
-      try:
-        predicted = detect_for_VOCevaldet(net, 
-                                          im_path, 
-                                          NMS_THRESH)
+  with open('%s.txt' % result_filename, 'w') as output_fp:
+    with open(annotation_file, 'r') as f:
+      for line in f:
+        if line is None: break
+        word = line.strip().split(' ')
+        image_filename = word[0]
+        im_path = os.path.join(image_filename_prefix, 
+                               image_filename + '.jpg')
+        gt = None
+        if guided_detection:
+          gt = gt_all[image_filename]
+        try:
+          predicted = detect_for_VOCevaldet(net, 
+                                            im_path, 
+                                            NMS_THRESH,
+                                            guided_detection,
+                                            gt)
             
-      except Exception as err:
-        print('ERROR: %s' % im_path)
-        continue
+        except Exception as err:
+          print('ERROR: %s' % im_path)
+          continue
 
-      # NOTE: write detection results into the result_filename
-      for result_box in predicted:
-        output_fp.write('%s %d %f %d %d %d %d\n' % (result_box[0],
-                                                    result_box[1],
-                                                    result_box[2],
-                                                    result_box[3],
-                                                    result_box[4],
-                                                    result_box[5],
-                                                    result_box[6]))
-        if validation_sample_count % 100 == 0: output_fp.flush()
+        # NOTE: write detection results into the result_filename
+        for result_box in predicted:
+          output_fp.write('%s %d %f %d %d %d %d\n' % (result_box[0],
+                                                      result_box[1],
+                                                      result_box[2],
+                                                      result_box[3],
+                                                      result_box[4],
+                                                      result_box[5],
+                                                      result_box[6]))
+          if validation_sample_count % 100 == 0: output_fp.flush()
 
-      validation_sample_count += 1
-      print('count: %d, %s' % (validation_sample_count, im_path)) 
-
-  # close fp for result_filename.txt
-  output_fp.close()
-  # NOTE: save gt data
-  with gzip.open('%s.pkl' % result_filename, 'wb') as pkl_fp:
-    print('Saving gt for all %s' % metafile)
-    pickle.dump(gt, pkl_fp)
-
+        validation_sample_count += 1
+        print('count: %d, %s' % (validation_sample_count, im_path)) 
+  print('Done predicting for %s' % annotation_file)
 
 
 def parse_args():
@@ -266,6 +281,12 @@ def parse_args():
   parser.add_argument('--output', 
                       dest='result_filename', 
                       help='filename for saving gt and detection results')
+  parser.add_argument('--input', 
+                      dest='gt_filename', default='', 
+                      help='filename for previously saved gt file i.e. *.pkl')
+  parser.add_argument('--guide',
+                      dest='guided_detection', default=False, type=bool,
+                      help='whether to use guided detection or not')
   group = parser.add_mutually_exclusive_group()
   group.add_argument("-predict", "--predict", action="store_true", default=False,
                      help="predict given annotation_text.txt" "(default: %(defaults)s)")
@@ -287,7 +308,9 @@ if __name__ == '__main__':
     caffe.set_device(0)
     caffe.set_mode_gpu()
     pprint.pprint(cfg)
+    guided_detection = args.guided_detection
     result_filename = args.result_filename
+    gt_filename = args.gt_filename
   else:
     raise Exception('Configuration file i.e. *.yml file should be given')
 
@@ -298,14 +321,25 @@ if __name__ == '__main__':
     image_filename_prefix = '/storage/product/detection/11st_All/Images'
     annotation_file = os.path.join('/storage/product/detection/11st_All/Annotations', 
                                    'annotations_val.txt')
-    #import pdb; pdb.set_trace()
+    import pdb; pdb.set_trace()
+    # NOTE: save gt from annotation file first
+    if gt_filename == '':
+      save_gt_from_annotation_file(annotation_file, gt_filename)
+    else:
+      # NOTE: load gt data for guided detection
+      with gzip.open('%s.pkl' % gt_filename, 'rb') as pkl_fp:
+        gt = pickle.load(pkl_fp)
+
+    # start prediction
     run_detector_for_evaluate(prototxt, 
                               caffemodel, 
                               image_filename_prefix,
                               annotation_file,
-                              result_filename)
+                              result_filename,
+                              guided_detection,
+                              gt_all=gt)
   elif args.eval:
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     assert(os.path.exists('%s.txt' % result_filename))
     assert(os.path.exists('%s.pkl' % result_filename))
 
