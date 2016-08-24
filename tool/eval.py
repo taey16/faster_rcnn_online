@@ -38,6 +38,7 @@ CLASSES = ('__background__', # always index 0
 
 
 def boxoverlap(gt_box, pred_box):
+  """Compute IoU between gt-box and predicted-box from Moonki"""
   x1 = max(gt_box[0], pred_box[0])
   y1 = max(gt_box[1], pred_box[1])
   x2 = min(gt_box[2], pred_box[2])
@@ -47,8 +48,8 @@ def boxoverlap(gt_box, pred_box):
   h = y2 - y1 + 1
   inter = w * h
 
-  aarea = (gt_box[2] - gt_box[0] + 1) * (gt_box[3] - gt_box[1] + 1)
-  barea = (pred_box[2] - pred_box[0] + 1) * (pred_box[3] - pred_box[1] + 1)
+  aarea = (gt_box[2]  - gt_box[0]  + 1) * (gt_box[3]  - gt_box[1]  + 1)
+  barea = (pred_box[2]- pred_box[0]+ 1) * (pred_box[3]- pred_box[1]+ 1)
 
   o = float(inter) / float(aarea + barea - inter + 1e-10)
 
@@ -74,7 +75,7 @@ def VOCevaldet(gt_all,
 
   tp = np.zeros(len(predicted_all))
   fp = np.zeros(len(predicted_all))
-  for image_idx, predicted_item in enumerate(predicted_all):
+  for predicted_box_idx, predicted_item in enumerate(predicted_all):
     # get predicted result
     image_id = predicted_item[0]
     predicted_cls_idx = int(predicted_item[1])
@@ -91,22 +92,26 @@ def VOCevaldet(gt_all,
 
     max_iou = 0
     hit_cls_idx = None
-    for box_idx, gt_box in enumerate(gt_boxes):
+    for gt_box_idx, gt_box in enumerate(gt_boxes):
       iou = boxoverlap(gt_box, predicted_box)
       if max_iou < iou:
         max_iou = iou
-        hit_cls_idx = gt_cls_ids[box_idx]
+        hit_cls_idx = gt_cls_ids[gt_box_idx]
 
     if max_iou > IOU_RATIO:
       #if confidence > CONF_THRESH and predicted_cls_idx == hit_cls_idx:
       if predicted_cls_idx == hit_cls_idx:
-        tp[image_idx] = 1
+        tp[predicted_box_idx] = 1
       else: 
         # false positive (multiple detection)
-        fp[image_idx] = 1
+        fp[predicted_box_idx] = 1
     else: 
       # false positive
-      fp[image_idx] = 1
+      fp[predicted_box_idx] = 1
+
+    if predicted_box_idx % 100000 == 0:
+      print('%d boxes processed' % predicted_box_idx)
+      sys.stdout.flush()
 
   tp = np.cumsum(tp) 
   fp = np.cumsum(fp)
@@ -340,14 +345,14 @@ if __name__ == '__main__':
                               gt_all=gt)
   elif args.eval:
     #import pdb; pdb.set_trace()
-    assert(os.path.exists('%s.txt' % result_filename))
-    assert(os.path.exists('%s.pkl' % result_filename))
+    #assert(os.path.exists('%s.txt' % result_filename))
+    #assert(os.path.exists('%s.pkl' % result_filename))
 
     # NOTE: read detection results from the result_filename
     predicted_results = [tuple(entry.split(' ')) \
                            for entry in open('%s.txt' % result_filename, 'r')]
     # NOTE: load gt data
-    with gzip.open('%s.pkl' % result_filename, 'rb') as pkl_fp:
+    with gzip.open('%s.pkl' % gt_filename, 'rb') as pkl_fp:
       gt = pickle.load(pkl_fp)
    
     # compute mAP for all category (NOTE: Not per category)
