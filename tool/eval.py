@@ -116,6 +116,7 @@ def VOCevaldet(gt_all,
   tp = np.cumsum(tp) 
   fp = np.cumsum(fp)
 
+  #import pdb; pdb.set_trace()
   recall = tp / npos # broadcast
   precision = np.divide(tp, fp+tp) # ele-wise divide
 
@@ -137,7 +138,8 @@ def VOCevaldet(gt_all,
 
     average_precision += p / 11.0
 
-  print 'average_precision: %f'% (average_precision)
+  print 'average_precision: %f' % (average_precision)
+  print 'maximum recall(used for guided detection only): %f' % recall[-1]
 
   return average_precision
 
