@@ -7,4 +7,6 @@ CUDA_VISIBLE_DEVICES=0 python tool/eval.py --cfg cfg/faster_rcnn_end2end_test.ym
 # prediction for mAP evaluation (guided detection)
 CUDA_VISIBLE_DEVICES=0 python tool/eval.py --cfg cfg/faster_rcnn_end2end_test.yml --output ./result --guided true --predict
 # mAP evaluation
-CUDA_VISIBLE_DEVICES=0 python tool/eval.py --cfg cfg/faster_rcnn_end2end_test.yml --output ./result --eval
+python tool/eval.py --cfg cfg/faster_rcnn_end2end_test.yml --output ./result --eval
+# mAP evaluation (guided detection)
+python tool/eval.py --cfg cfg/faster_rcnn_end2end_test.yml --input vgg16_vocdeteval --output vgg16_vocdeteval_guided --eval
