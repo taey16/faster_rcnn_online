@@ -187,6 +187,14 @@ __C.DEDUP_BOXES = 1./16.
 # We use the same pixel mean for all networks even though it's not exactly what
 # they were trained with
 __C.PIXEL_MEANS = np.array([[[102.9801, 115.9465, 122.7717]]])
+# NOTE: ResNet's pxl mean
+# file = '/storage/ImageNet/ILSVRC2012/model/resnet/ResNet_caffe_models/ResNet_mean.binaryproto'
+# blob = caffe.proto.caffe_pb2.BlobProto()
+# data = open(file, 'rb').read()
+# blob.ParseFromString(data)
+# mean_val = np.squeeze(np.array( caffe.io.blobproto_to_array(blob) ))
+# __C.PIXEL_MEANS = np.mean(np.mean(mean_val, axis=1), axis=1)
+##__C.PIXEL_MEANS = np.array([[[ 103.0626238 ,  115.90288257,  123.15163084]]])
 
 # For reproducibility
 __C.RNG_SEED = 3
