@@ -32,6 +32,8 @@ def _get_image_blob(im):
             in the image pyramid
     """
     im_orig = im.astype(np.float32, copy=True)
+    # NOTE: you can set cfg.PIXEL_MEANS in lib/fast_rcnn/config.py
+    # default value is vgg's
     im_orig -= cfg.PIXEL_MEANS
 
     im_shape = im_orig.shape

@@ -30,7 +30,7 @@ def get_minibatch(im, roidb, num_classes, set_id):
     'num_images ({}) must divide BATCH_SIZE ({})'. \
     format(num_images, cfg.TRAIN.BATCH_SIZE)
     
-  # does not used in USE_RPN: True
+  # does not used in case USE_RPN: True
   #rois_per_image = cfg.TRAIN.BATCH_SIZE / num_images
   #fg_rois_per_image = np.round(cfg.TRAIN.FG_FRACTION * rois_per_image)
 
@@ -69,6 +69,7 @@ def _get_image_blob(im, roidb, target_size):
   im_scales = []
   for i in xrange(num_images):
     #target_size = cfg.TRAIN.SCALES[scale_inds[i]]
+    # NOTE: cfg.PIXEL_MEANS can be set in lib/fast_rcnn/config.py
     im, im_scale = prep_im_for_blob(im, 
                                     cfg.PIXEL_MEANS, 
                                     target_size, 
