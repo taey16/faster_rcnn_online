@@ -65,7 +65,16 @@ message SmoothL1LossParameter {
 	* Check `Makefile.config` with `WITH_PYTHON_LAYER := 1` and `make pycaffe`
 
 # Run example script: run_me.sh
-- `CUDA_VISIBLE_DEVICES=1 nohup python tool/train_val_net.py --rand --cfg /works/faster_rcnn_online/cfg/faster_rcnn_end2end_train_scale_jitter.yml --output ./output > logs.log &`
+- train/val
+  * `CUDA_VISIBLE_DEVICES=0 nohup python tool/train_val_net.py --rand --cfg /works/faster_rcnn_online/cfg/faster_rcnn_end2end_train_scale_jitter.yml --output ./output > logs.log &`
+- Prediction for mAP eval. (**non-guided**)
+  * `CUDA_VISIBLE_DEVICES=0 python tool/eval.py --cfg cfg/faster_rcnn_end2end_test.yml --output ./prediction_result --predict`
+- Prediction for mAP eval. (**guided**)
+  * `CUDA_VISIBLE_DEVICES=0 python tool/eval.py --cfg cfg/faster_rcnn_end2end_test.yml --output ./prediction_result_guided --guide true --predict`
+- Evaluation (mAP)
+  * `CUDA_VISIBLE_DEVICES=0 python tool/eval.py --cfg cfg/faster_rcnn_end2end_test.yml --input gt_pkl_file --output ./prediction_result --eval`
+    * --input: pickle file for gt(if not provided, it saved automatically)
+    * --output: txt file for prediction result 
 
 # Input database format
 ```
