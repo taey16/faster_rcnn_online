@@ -305,6 +305,7 @@ def parse_args():
 
 if __name__ == '__main__':
   args = parse_args()
+  #import pdb; pdb.set_trace()
   if args.cfg_file is not None:
     # conf. from yml
     cfg_from_file(args.cfg_file)
