@@ -1974,7 +1974,7 @@ layer {
   bottom: "pool5"
   top: "cls_score"
   inner_product_param {
-    num_output: 20
+    num_output: 13 # 13(num_classes, 12cat + 1bg)
   }
 }
 
@@ -1984,7 +1984,7 @@ layer {
   bottom: "pool5"
   top: "bbox_pred"
   inner_product_param {
-    num_output: 80 # 20(12cat + 1bg) * 4(roi points)
+    num_output: 52 # 13(12cat + 1bg) * 4(roi points)
   }
 }
 
