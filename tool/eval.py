@@ -287,7 +287,7 @@ def parse_args():
                       type=str)
   parser.add_argument('--output', 
                       dest='result_filename', 
-                      help='filename for saving gt and detection results')
+                      help='filename for saving detection results(ROIs)')
   parser.add_argument('--input', 
                       dest='gt_filename', default='', 
                       help='filename for previously saved gt file i.e. *.pkl')
