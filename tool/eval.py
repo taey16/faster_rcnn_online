@@ -292,7 +292,7 @@ def parse_args():
                       dest='gt_filename', default='', 
                       help='filename for previously saved gt file i.e. *.pkl')
   parser.add_argument('--guide',
-                      dest='guided_detection', default=False, type=bool,
+                      dest='guided_detection', action="store_true", default=False,
                       help='whether to use guided detection or not')
   group = parser.add_mutually_exclusive_group()
   group.add_argument("-predict", "--predict", action="store_true", default=False,
