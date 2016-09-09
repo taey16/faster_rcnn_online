@@ -63,7 +63,7 @@ message SmoothL1LossParameter {
 ```
 - Build caffe
 	* Check `Makefile.config` with `WITH_PYTHON_LAYER := 1` and `make pycaffe`
-	* Set path for `pycaffe` in [`_init_paths.py`](http://bitbucket.skplanet.com/projects/STIN/repos/faster_rcnn_online/browse/tool/_init_paths.py)
+	* Set path for `pycaffe` in [`_init_paths.py`](https://github.com/taey16/faster_rcnn_online/blob/trainval/tool/_init_paths.py)
 
 # Run example script: run_me.sh
 - train/val
