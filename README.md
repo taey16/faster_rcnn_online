@@ -80,7 +80,6 @@ message SmoothL1LossParameter {
     * --output: txt file for prediction result 
 
 # Input database format
-- See: http://10.202.35.109:2596/PBrain/product/detection/11st_All/
 ```
 dataset_root/
 |- Annotations
